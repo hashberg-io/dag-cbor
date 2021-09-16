@@ -1,9 +1,11 @@
 # `py-dag-cbor`: A Python implementation of [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
 
+[![PyPI status](https://app.travis-ci.com/hashberg-io/py-dag-cbor.svg?token=Aux1v4K7oU16PNQw8VRa&branch=main)](https://app.travis-ci.com/github/hashberg-io/py-dag-cbor/)
 [![Generic badge](https://img.shields.io/badge/python-3.7+-green.svg)](https://docs.python.org/3.7/)
 [![Checked with Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://github.com/python/mypy)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/py-dag-cbor.svg)](https://pypi.python.org/pypi/py-dag-cbor/)
 [![PyPI status](https://img.shields.io/pypi/status/py-dag-cbor.svg)](https://pypi.python.org/pypi/py-dag-cbor/)
+
 
 This is a Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/), a subset of the [Concise Binary Object Representation (CBOR)](https://cbor.io/) supporting the [IPLD Data Model](https://ipld.io/docs/data-model/) and enforcing a unique (strict) encoded representation of items.
 
