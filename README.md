@@ -7,7 +7,7 @@
 [![PyPI status](https://img.shields.io/pypi/status/py-dag-cbor.svg)](https://pypi.python.org/pypi/py-dag-cbor/)
 
 
-This is a Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/), a subset of the [Concise Binary Object Representation (CBOR)](https://cbor.io/) supporting the [IPLD Data Model](https://ipld.io/docs/data-model/) and enforcing a unique (strict) encoded representation of items.
+This is a fully compliant Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/), a subset of the [Concise Binary Object Representation (CBOR)](https://cbor.io/) supporting the [IPLD Data Model](https://ipld.io/docs/data-model/) and enforcing a unique (strict) encoded representation of items.
 
 You can install this library with `pip`:
 
