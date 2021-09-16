@@ -2,18 +2,23 @@
 
 import setuptools #type:ignore
 
+with open("README.md", "r") as fh:
+    long_description: str = fh.read()
+
 setuptools.setup(
     name="py-dag-cbor",
-    version="0.0.0",
+    version="0.0.3",
     author="hashberg",
     author_email="sg495@users.noreply.github.com",
-    description="Python implementation of the DAG-CBOR codec for IPLD.",
     url="https://github.com/hashberg-io/py-dag-cbor",
+    description="Python implementation of the DAG-CBOR codec.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     packages=setuptools.find_packages(exclude=["test"]),
     classifiers=[ # see https://pypi.org/classifiers/
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Natural Language :: English",
         "Typing :: Typed",
     ],

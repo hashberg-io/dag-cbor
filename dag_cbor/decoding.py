@@ -1,5 +1,5 @@
 """
-    Encoding functions for DAG-CBOR codec.
+    Deconding functions for DAG-CBOR codec.
 """
 
 from io import BufferedIOBase, BytesIO
