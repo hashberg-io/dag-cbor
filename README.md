@@ -19,7 +19,7 @@ The core functionality of the library is performed by the `encode` and `decode` 
 
 ```python
 >>> import dag_cbor
->>> dag_cbor.encode({"a": 12, "b": "hello!"})
+>>> dag_cbor.encode({'a': 12, 'b': 'hello!'})
 b'\xa2aa\x0cabfhello!'
 >>> dag_cbor.decode(b'\xa2aa\x0cabfhello!')
 {'a': 12, 'b': 'hello!'}
