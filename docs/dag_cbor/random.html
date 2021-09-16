@@ -34,14 +34,13 @@
 # pylint: disable = global-statement
 
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from hashlib import sha3_512
 import math
 from random import Random
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import cid # type: ignore
 import multihash # type: ignore
@@ -473,7 +472,7 @@ def rand_cid(n: Optional[int] = None) -&gt; Iterator[None]:
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_bool"><code class="name flex">
-<span>def <span class="ident">rand_bool</span></span>(<span>n: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_bool</span></span>(<span>n: Optional[int] = None) ‑> Iterator[bool]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>bool</code> data.
@@ -497,7 +496,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_bool_none"><code class="name flex">
-<span>def <span class="ident">rand_bool_none</span></span>(<span>n: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_bool_none</span></span>(<span>n: Optional[int] = None) ‑> Iterator[Optional[bool]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>Optional[bool]</code> data.
@@ -521,7 +520,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_bytes"><code class="name flex">
-<span>def <span class="ident">rand_bytes</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_bytes</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None) ‑> Iterator[bytes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>bytes</code> data.
@@ -549,7 +548,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_cid"><code class="name flex">
-<span>def <span class="ident">rand_cid</span></span>(<span>n: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_cid</span></span>(<span>n: Optional[int] = None) ‑> Iterator[None]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>CID</code> data.
@@ -649,7 +648,7 @@ maximum nesting level for containers:</p>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_dict"><code class="name flex">
-<span>def <span class="ident">rand_dict</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_dict</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) ‑> Iterator[dict]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>dict</code> data.
@@ -686,7 +685,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_float"><code class="name flex">
-<span>def <span class="ident">rand_float</span></span>(<span>n: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_float</span></span>(<span>n: Optional[int] = None) ‑> Iterator[float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>int</code> data.
@@ -724,7 +723,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_int"><code class="name flex">
-<span>def <span class="ident">rand_int</span></span>(<span>n: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_int</span></span>(<span>n: Optional[int] = None) ‑> Iterator[int]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>int</code> data.
@@ -749,7 +748,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_list"><code class="name flex">
-<span>def <span class="ident">rand_list</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_list</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) ‑> Iterator[list]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>list</code> data.
@@ -830,7 +829,7 @@ def rand_options(*,
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_str"><code class="name flex">
-<span>def <span class="ident">rand_str</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None) ‑> collections.abc.Iterator</span>
+<span>def <span class="ident">rand_str</span></span>(<span>n: Optional[int] = None, *, length: Optional[int] = None) ‑> Iterator[str]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random <code>str</code> data.
