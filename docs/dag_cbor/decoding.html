@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>dag_cbor.decoding API documentation</title>
+<meta name="description" content="Encoding functions for DAG-CBOR codec." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>dag_cbor.decoding</code></h1>
+</header>
+<section id="section-intro">
+<p>Encoding functions for DAG-CBOR codec.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+    Encoding functions for DAG-CBOR codec.
+&#34;&#34;&#34;
+
+from io import BufferedIOBase, BytesIO
+import math
+import struct
+from typing import Optional, Tuple, Union
+
+import cid # type: ignore
+
+from .encoding import EncodableType
+from .utils import CBORDecodingError, DAGCBORDecodingError
+
+def decode(stream_or_bytes: Union[BufferedIOBase, bytes]) -&gt; EncodableType:
+    &#34;&#34;&#34;
+        Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
+    &#34;&#34;&#34;
+    if isinstance(stream_or_bytes, bytes):
+        stream: BufferedIOBase = BytesIO(stream_or_bytes)
+    else:
+        stream = stream_or_bytes
+    data = _decode_item(stream)
+    remaining_bytes = stream.read()
+    if len(remaining_bytes) &gt; 0:
+        raise DAGCBORDecodingError(&#34;Encode and decode must operate on a single top-level CBOR object&#34;)
+    return data
+
+def _decode_item(stream: BufferedIOBase) -&gt; EncodableType:
+    # pylint: disable = too-many-return-statements
+    major_type, arg = _decode_head(stream)
+    if isinstance(arg, float):
+        # float
+        assert major_type == 0x7
+        if math.isnan(arg):
+            raise DAGCBORDecodingError(&#34;NaN is not an allowed float value.&#34;)
+        if math.isinf(arg):
+            if arg &gt; 0:
+                raise DAGCBORDecodingError(&#34;Infinity is not an allowed float value.&#34;)
+            raise DAGCBORDecodingError(&#34;-Infinity is not an allowed float value.&#34;)
+        return arg
+    if major_type == 0x0:
+        return arg # unsigned int
+    if major_type == 0x1:
+        return -1-arg # negative int
+    if major_type == 0x2:
+        return _decode_bytes(stream, arg)
+    if major_type == 0x3:
+        return _decode_str(stream, arg)
+    if major_type == 0x4:
+        return _decode_list(stream, arg)
+    if major_type == 0x5:
+        return _decode_dict(stream, arg)
+    if major_type == 0x6:
+        return _decode_cid(stream, arg)
+    if major_type == 0x7:
+        return _decode_bool_none(stream, arg)
+    raise RuntimeError(&#34;Major type must be one of 0x0-0x7.&#34;)
+
+def _decode_head(stream: BufferedIOBase) -&gt; Tuple[int, Union[int, float]]:
+    # read leading byte
+    res = stream.read(1)
+    if len(res) &lt; 1:
+        raise CBORDecodingError(&#34;Unexpected EOF while reading leading byte of data item head.&#34;)
+    leading_byte = res[0]
+    major_type = leading_byte &gt;&gt; 5
+    additional_info = leading_byte &amp; 0b11111
+    # read argument value and return (major_type, arg)
+    if additional_info &lt; 24:
+        # argument value = additional info
+        return (major_type, additional_info)
+    if additional_info &gt; 27 or (major_type == 0x7 and additional_info != 27):
+        raise DAGCBORDecodingError(f&#34;Invalid additional info {additional_info} in data item head for major type {major_type}.&#34;)
+    argument_nbytes = 1&lt;&lt;(additional_info-24)
+    res = stream.read(argument_nbytes)
+    if len(res) &lt; argument_nbytes:
+        raise CBORDecodingError(f&#34;Unexpected EOF while reading {argument_nbytes} byte argument of data item head.&#34;)
+    if additional_info == 24:
+        # 1 byte of unsigned int argument value to follow
+        return (major_type, res[0])
+    if additional_info == 25:
+        # 2 bytes of unsigned int argument value to follow
+        arg = struct.unpack(&#34;&gt;H&#34;, res)[0]
+        if arg &lt;= 255:
+            raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 2 bytes, while 1 byte would have been enough.&#34;)
+        return (major_type, arg)
+    if additional_info == 26:
+        # 4 bytes of unsigned int argument value to follow
+        arg = struct.unpack(&#34;&gt;L&#34;, res)[0]
+        if arg &lt;= 65535:
+            raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 4 bytes, while 2 bytes would have been enough.&#34;)
+        return (major_type, arg)
+    # necessarily additional_info == 27
+    if major_type == 0x7:
+        # 8 bytes of float argument value to follow
+        return (major_type, struct.unpack(&#34;&gt;d&#34;, res)[0])
+    # 8 bytes of unsigned int argument value to follow
+    arg = struct.unpack(&#34;&gt;Q&#34;, res)[0]
+    if arg &lt;= 4294967295:
+        raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 8 bytes, while 4 bytes would have been enough.&#34;)
+    return (major_type, arg)
+
+def _decode_bytes(stream: BufferedIOBase, length: int) -&gt; bytes:
+    res = stream.read(length)
+    if len(res) &lt; length:
+        raise CBORDecodingError(f&#34;Unexpected EOF while reading {length} bytes of bytestring.&#34;)
+    return res
+
+def _decode_str(stream: BufferedIOBase, length: int) -&gt; str:
+    res = stream.read(length)
+    if len(res) &lt; length:
+        raise CBORDecodingError(f&#34;Unexpected EOF while reading {length} bytes of string.&#34;)
+    return res.decode(encoding=&#34;utf-8&#34;, errors=&#34;strict&#34;)
+
+def _decode_list(stream: BufferedIOBase, length: int) -&gt; list:
+    l: list = []
+    for i in range(length):
+        try:
+            l.append(_decode_item(stream))
+        except CBORDecodingError as e:
+            raise CBORDecodingError(f&#34;Error while decoding item #{i} in list of length {length}.&#34;) from e
+    return l
+
+def _decode_dict(stream: BufferedIOBase, length: int) -&gt; dict:
+    d: dict = {}
+    for i in range(length):
+        try:
+            k = _decode_item(stream)
+        except CBORDecodingError as e:
+            raise CBORDecodingError(f&#34;Error while decoding key #{i} in dict of length {length}.&#34;) from e
+        if not isinstance(k, str):
+            raise DAGCBORDecodingError(f&#34;Key #{i} in dict of length {length} is of type {type(k)}, expected string.&#34;)
+        try:
+            v = _decode_item(stream)
+        except CBORDecodingError as e:
+            raise CBORDecodingError(f&#34;Error while decoding value #{i} in dict of length {length}.&#34;) from e
+        d[k] = v
+    if len(d) != length:
+        raise DAGCBORDecodingError(f&#34;Found only {len(d)} unique keys out of {length} key-value pairs.&#34;)
+    return d
+
+def _decode_cid(stream: BufferedIOBase, arg: int) -&gt; cid.cid.BaseCID:
+    if arg != 42:
+        raise DAGCBORDecodingError(f&#34;Error while decoding major type 0x6: tag {arg} is not allowed.&#34;)
+    try:
+        cid_bytes = _decode_item(stream)
+    except CBORDecodingError as e:
+        raise CBORDecodingError(&#34;Error while decoding CID bytes.&#34;) from e
+    if not isinstance(cid_bytes, bytes):
+        raise DAGCBORDecodingError(f&#34;Expected CID bytes, found data of type {type(cid_bytes)} instead.&#34;)
+    return cid.from_bytes(cid_bytes)
+
+def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Optional[bool]:
+    if arg == 20:
+        return False
+    if arg == 21:
+        return True
+    if arg == 22:
+        return None
+    raise DAGCBORDecodingError(f&#34;Error while decoding major type 0x7: simple value {arg} is not allowed.&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="dag_cbor.decoding.decode"><code class="name flex">
+<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes]) ‑> Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode(stream_or_bytes: Union[BufferedIOBase, bytes]) -&gt; EncodableType:
+    &#34;&#34;&#34;
+        Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
+    &#34;&#34;&#34;
+    if isinstance(stream_or_bytes, bytes):
+        stream: BufferedIOBase = BytesIO(stream_or_bytes)
+    else:
+        stream = stream_or_bytes
+    data = _decode_item(stream)
+    remaining_bytes = stream.read()
+    if len(remaining_bytes) &gt; 0:
+        raise DAGCBORDecodingError(&#34;Encode and decode must operate on a single top-level CBOR object&#34;)
+    return data</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="dag_cbor" href="index.html">dag_cbor</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

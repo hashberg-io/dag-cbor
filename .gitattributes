@@ -1,0 +1,9 @@
+docs/* linguist-documentation
+htmlcov/* linguist-vendored
+test/* linguist-vendored
+pypi-distrib-archives.bat -linguist-detectable
+pypi-distrib-upload.bat -linguist-detectable
+run-mypy.bat -linguist-detectable
+run-pdoc.bat -linguist-detectable
+run-pip-install.bat -linguist-detectable
+run-pytest-cov.bat -linguist-detectable
