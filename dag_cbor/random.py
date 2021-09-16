@@ -4,14 +4,13 @@
 # pylint: disable = global-statement
 
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from hashlib import sha3_512
 import math
 from random import Random
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import cid # type: ignore
 import multihash # type: ignore
