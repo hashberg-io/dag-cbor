@@ -49,7 +49,7 @@ b'\xa2aa\x0cabfhello!'
 
 ## Random data
 
-The `random` module contains functions to generate random data compatible with DAG-CBOR encoding. The functions are named `rand_X`, where `X` is one of `int`, `bytes`, `str`, `bool` (for `False` and `True`), `bool_none` (for `False`, `True` or `None`), `list`, `dict`, or `cid` (for CID data, encoded as an instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package). The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`:
+The `random` module contains functions to generate random data compatible with DAG-CBOR encoding. The functions are named `rand_X`, where `X` is one of `int`, `bytes`, `str`, `bool` (for `False` and `True`), `bool_none` (for `False`, `True` and `None`), `list`, `dict`, or `cid` (for CID data, encoded as an instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package). The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`:
 
 ```python
 >>> import pprint
