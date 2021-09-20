@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dag-cbor",
-    version="0.0.3",
+    version="0.0.4",
     author="hashberg",
     author_email="sg495@users.noreply.github.com",
     url="https://github.com/hashberg-io/py-dag-cbor",
@@ -18,7 +18,7 @@ setuptools.setup(
     classifiers=[ # see https://pypi.org/classifiers/
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Natural Language :: English",
         "Typing :: Typed",
     ],

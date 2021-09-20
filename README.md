@@ -1,4 +1,4 @@
-# `py-dag-cbor`: A Python implementation of [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
+# `dag-cbor`: A Python implementation of [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
 
 [![PyPI status](https://app.travis-ci.com/hashberg-io/py-dag-cbor.svg?token=Aux1v4K7oU16PNQw8VRa&branch=main)](https://app.travis-ci.com/github/hashberg-io/py-dag-cbor/)
 [![Generic badge](https://img.shields.io/badge/python-3.7+-green.svg)](https://docs.python.org/3.7/)
