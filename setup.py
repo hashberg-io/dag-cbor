@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description: str = fh.read()
 
 setuptools.setup(
-    name="py-dag-cbor",
+    name="dag-cbor",
     version="0.0.3",
     author="hashberg",
     author_email="sg495@users.noreply.github.com",
