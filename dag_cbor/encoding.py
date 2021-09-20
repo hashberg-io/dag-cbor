@@ -11,7 +11,7 @@ import cid # type: ignore
 
 from .utils import CBOREncodingError, DAGCBOREncodingError
 
-EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID]
+EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]
 
 @overload
 def encode(data: EncodableType, stream: None = None) -> bytes:
