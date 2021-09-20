@@ -76,17 +76,21 @@ def _canonical_order_dict(value: dict) -&gt; dict:
     sorted_utf8key_key_val_pairs = sorted(utf8key_key_val_pairs, key=lambda i: i[0])
     return {k: v for _, k, v in sorted_utf8key_key_val_pairs}
 
-def canonical_order_dict(value: dict) -&gt; dict:
-    &#34;&#34;&#34;
-        Returns a dictionary with canonically ordered keys,
-        according to the DAG-CBOR specification.
-    &#34;&#34;&#34;
-    # check keys for DAG-CBOR compliance
+def _check_key_compliance(value: dict):
+    &#34;&#34;&#34; Check keys for DAG-CBOR compliance. &#34;&#34;&#34;
     for k in value.keys():
         if not isinstance(k, str):
             raise DAGCBOREncodingError(&#34;Keys for maps must be strings.&#34;)
     if len(value.keys()) != len(set(value.keys())):
         raise CBOREncodingError(&#34;Keys for maps must be unique.&#34;)
+
+
+def canonical_order_dict(value: dict) -&gt; dict:
+    &#34;&#34;&#34;
+        Returns a dictionary with canonically ordered keys,
+        according to the DAG-CBOR specification.
+    &#34;&#34;&#34;
+    _check_key_compliance(value)
     # sort keys canonically
     return _canonical_order_dict(value)</code></pre>
 </details>
@@ -113,12 +117,7 @@ according to the DAG-CBOR specification.</p></div>
         Returns a dictionary with canonically ordered keys,
         according to the DAG-CBOR specification.
     &#34;&#34;&#34;
-    # check keys for DAG-CBOR compliance
-    for k in value.keys():
-        if not isinstance(k, str):
-            raise DAGCBOREncodingError(&#34;Keys for maps must be strings.&#34;)
-    if len(value.keys()) != len(set(value.keys())):
-        raise CBOREncodingError(&#34;Keys for maps must be unique.&#34;)
+    _check_key_compliance(value)
     # sort keys canonically
     return _canonical_order_dict(value)</code></pre>
 </details>

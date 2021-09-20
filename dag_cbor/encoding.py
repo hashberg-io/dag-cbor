@@ -9,7 +9,7 @@ from typing import Optional, overload, Union
 
 import cid # type: ignore
 
-from .utils import CBOREncodingError, DAGCBOREncodingError
+from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
 EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]
 
@@ -116,12 +116,7 @@ def _encode_list(stream: BufferedIOBase, value: list):
         _encode(stream, item)
 
 def _encode_dict(stream: BufferedIOBase, value: dict):
-    # check keys for DAG-CBOR compliance
-    for k in value.keys():
-        if not isinstance(k, str):
-            raise DAGCBOREncodingError("Keys for maps must be strings.")
-    if len(value.keys()) != len(set(value.keys())):
-        raise CBOREncodingError("Keys for maps must be unique.")
+    _check_key_compliance(value)
     # sort keys canonically
     try:
         utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)

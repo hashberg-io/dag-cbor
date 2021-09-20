@@ -43,7 +43,6 @@ def reset_rand_options():
         Resets random generation options to their default values.
     """
     global _options
-    global _default_options
     global _rand
     _options = _default_options
     _rand = Random(0)
@@ -51,7 +50,6 @@ def reset_rand_options():
 def get_options():
     """ Get a readonly view of the random generation options. """
     # pylint: disable = global-statement
-    global _options
     return MappingProxyType(_options)
 
 @contextmanager
@@ -72,7 +70,10 @@ def rand_options(*,
                  min_float: Optional[float] = None,
                  max_float: Optional[float] = None,
                  include_cid: Optional[bool] = None,):
-    """ Returns with-statement context for temporary option setting. """
+    """
+        Returns with-statement context manager for temporary option setting.
+        See `set_rand_options` for the full list of available options.
+    """
     # pylint: disable = too-many-locals
     global _options
     global _rand
@@ -109,8 +110,29 @@ def set_rand_options(*,
                      canonical: Optional[bool] = None,
                      min_float: Optional[float] = None,
                      max_float: Optional[float] = None,
-                    include_cid: Optional[bool] = None,):
-    """ Sets random generation options. """
+                     include_cid: Optional[bool] = None,):
+    """
+        Sets random generation options:
+
+        ```python
+        seed: int           # set new random number generator, with this seed
+        min_int: int        # smallest `int` value
+        max_int: int        # largest `int` value
+        min_bytes: int      # min length of `bytes` value
+        max_bytes: int      # max length of `bytes` value
+        min_chars: int      # min length of `str` value
+        max_chars: int      # max length of `str` value
+        min_codepoint: int  # min utf-8 codepoint in `str` value
+        max_codepoint: int  # max utf-8 codepoint in `str` value
+        min_len: int        # min length of `list` and `dict` values
+        max_len: int        # max length of `list` and `dict` values
+        max_nesting: int    # max nesting of collections
+        canonical: bool     # whether `dict` values have canonically ordered keys
+        min_float: float    # smallest `float` value
+        max_float: float    # largest `float` value
+        include_cid: bool   # whether to generate CID values
+        ```
+    """
     # pylint: disable = too-many-branches, too-many-locals, too-many-statements
     global _options
     global _rand

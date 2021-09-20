@@ -39,9 +39,9 @@ from typing import Optional, overload, Union
 
 import cid # type: ignore
 
-from .utils import CBOREncodingError, DAGCBOREncodingError
+from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
-EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID]
+EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]
 
 @overload
 def encode(data: EncodableType, stream: None = None) -&gt; bytes:
@@ -146,12 +146,7 @@ def _encode_list(stream: BufferedIOBase, value: list):
         _encode(stream, item)
 
 def _encode_dict(stream: BufferedIOBase, value: dict):
-    # check keys for DAG-CBOR compliance
-    for k in value.keys():
-        if not isinstance(k, str):
-            raise DAGCBOREncodingError(&#34;Keys for maps must be strings.&#34;)
-    if len(value.keys()) != len(set(value.keys())):
-        raise CBOREncodingError(&#34;Keys for maps must be unique.&#34;)
+    _check_key_compliance(value)
     # sort keys canonically
     try:
         utf8key_val_pairs = [(k.encode(&#34;utf-8&#34;, errors=&#34;strict&#34;), v)
@@ -196,7 +191,7 @@ def _encode_float(stream: BufferedIOBase, value: float):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.encoding.encode"><code class="name flex">
-<span>def <span class="ident">encode</span></span>(<span>data: Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID], stream: Optional[io.BufferedIOBase] = None) ‑> Optional[bytes]</span>
+<span>def <span class="ident">encode</span></span>(<span>data: Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float], stream: Optional[io.BufferedIOBase] = None) ‑> Optional[bytes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Encodes the given <code>data</code> with the DAG-CBOR codec.
