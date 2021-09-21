@@ -29,6 +29,8 @@ b'\xa2aa\x0cabfhello!'
 {'a': 12, 'b': 'hello!'}
 ```
 
+## Usage with binary streams
+
 A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed to the `encode` function using the optional keyword argument `stream`, in which case the encoded bytes are written to the stream rather than returned:
 
 ```python
@@ -49,47 +51,44 @@ b'\xa2aa\x0cabfhello!'
 
 ## Random data
 
-The `random` module contains functions to generate random data compatible with DAG-CBOR encoding. The functions are named `rand_X`, where `X` is one of `int`, `bytes`, `str`, `bool` (for `False` and `True`), `bool_none` (for `False`, `True` or `None`), `list`, `dict`, or `cid` (for CID data, encoded as an instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package). The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`:
+The `random` module contains functions to generate random data compatible with DAG-CBOR encoding. The functions are named `rand_X`, where `X` is one of:
+
+- `int` for uniformly distributed integers
+- `float` for uniformly distributed floats, with fixed decimals
+- `bytes` for byte-strings of uniformly distributed length, with uniformly distributed bytes
+- `str` for strings of uniformly distributed length, with uniformly distributed codepoints (all valid UTF-8 strings, by rejection sampling)
+- `bool` for 50%-50% `False` or `True`
+- `bool_none` for 33%-33%-33% `False`, `True` or `None`
+- `list` for lists of uniformly distributed length, with random elements of any type
+- `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
+- `cid` for CID data (instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package)
+
+The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`:
 
 ```python
 >>> import pprint
->>> from dag_cbor.random import rand_options, rand_dict
->>> options = {
-... 	"min_codepoint": 0x30,
-...     "max_codepoint": 0x7a,
-...     "max_chars": 4,
-...     "max_bytes": 8,
-...		"include_cid": False
-... }
->>> with rand_options(**options):
-...     for d in rand_dict(3):
+>>> import dag_cbor
+>>> options = dict(min_codepoint=0x41, max_codepoint=0x5a, include_cid=False)
+>>> with dag_cbor.random.rand_options(**options):
+...     for d in dag_cbor.random.rand_dict(3):
 ...             pprint.pp(d)
 ...
-{'': False,
- 'biq': b'\x9b\xf4\xb7oG\x90',
- 'ctz': b'{\x94^`_',
- 'rg': 1.0563551621961306e+308,
- 'y': ['ejdx',
-       [None,
-        8009056699280396679,
-        3.6758824653722026e+307,
-        -1.5555617166832836e+308,
-        ''],
-       1.6466769889093459e+308,
-       [-12301485475384051926,
-        '',
-        b'zH\xe5',
-        18321703892302698705,
-        8.795874874880185e+307,
-        'jwdr']]}
-{'': -1.2571678042268863e+308, 'vmwq': -3474837013640509145}
-{'h': [['k', False, -14411084192553465082],
-       1.6359295422392278e+308,
-       'vcad',
-       False],
- 'nsio': b'*\xa6;\xf9\xab',
- 'sdmc': -359404367281466347}
+{'BIQPMZ': b'\x85\x1f\x07/\xcc\x00\xfc\xaa',
+ 'EJEYDTZI': {},
+ 'PLSG': {'G': 'JFG',
+          'HZE': -61.278,
+          'JWDRKRGZ': b'-',
+          'OCCKQPDJ': True,
+          'SJOCTZMK': False},
+ 'PRDLN': 39.129,
+ 'TUGRP': None,
+ 'WZTEJDXC': -69.933}
+{'GHAXI': 39.12,
+ 'PVUWZLC': 4.523,
+ 'TDPSU': 'TVCADUGT',
+ 'ZHGVSNSI': [-57, 9, -78.312]}
+{'': 11, 'B': True, 'FWD': {}, 'GXZBVAR': 'BTDWMGI', 'TDICHC': 87}
 ```
 
-For the full list of functions and options, please refer to the [`dag_cbor.random` documentation](https://hashberg-io.github.io/py-dag-cbor/dag_cbor/random.html).
+The function call `rand_X()`, without the positional argument `n`, would instead yield an infinite stream of random values. The `rand_options(**options)` context manager is used to set options temporarily: in the example above, we set string characters to be uppercase alphabetic (codepoints `0x41`-`0x5a`) and we excluded CID values from being generated. For the full list of functions and options, please refer to the [`dag_cbor.random` documentation](https://hashberg-io.github.io/py-dag-cbor/dag_cbor/random.html).
 

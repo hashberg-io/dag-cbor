@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 from hashlib import sha3_512
 import math
-from random import Random
+from random import Random # pylint: disable = import-self
 import sys
 from types import MappingProxyType
 from typing import Any, Dict, Iterator, List, Optional
@@ -15,30 +15,39 @@ from typing import Any, Dict, Iterator, List, Optional
 import cid # type: ignore
 import multihash # type: ignore
 
+from .encoding import EncodableType
 from .utils import _canonical_order_dict
 
+_min_int = -18446744073709551616
+_max_int = 18446744073709551615
+_min_float = -sys.float_info.max
+_max_float = sys.float_info.max
+_min_codepoint = 0x00
+_max_codepoint = 0x10FFFF
+
 _default_options: Dict[str, Any] = {
-    "min_int": -18446744073709551616,
-    "max_int": 18446744073709551615,
+    "min_int": -100,
+    "max_int": 100,
     "min_bytes": 0,
-    "max_bytes": 16,
+    "max_bytes": 8,
     "min_chars": 0,
-    "max_chars": 16,
-    "min_codepoint": 0x00,
-    "max_codepoint": 0x10FFFF,
+    "max_chars": 8,
+    "min_codepoint": 0x21,
+    "max_codepoint": 0x7e,
     "min_len": 0,
     "max_len": 8,
     "max_nesting": 2,
     "canonical": True,
-    "min_float": -sys.float_info.max,
-    "max_float": sys.float_info.max,
+    "min_float": -100,
+    "max_float": 100,
+    "float_decimals": 3,
     "include_cid": True,
 }
 
 _options = _default_options
 _rand = Random(0)
 
-def reset_rand_options():
+def reset_rand_options() -> None:
     """
         Resets random generation options to their default values.
     """
@@ -47,9 +56,16 @@ def reset_rand_options():
     _options = _default_options
     _rand = Random(0)
 
-def get_options():
-    """ Get a readonly view of the random generation options. """
-    # pylint: disable = global-statement
+def default_options() -> MappingProxyType:
+    """
+        Readonly view of the default random generation options.
+    """
+    return MappingProxyType(_default_options)
+
+def get_options() -> MappingProxyType:
+    """
+        Readonly view of the current random generation options.
+    """
     return MappingProxyType(_options)
 
 @contextmanager
@@ -69,9 +85,17 @@ def rand_options(*,
                  canonical: Optional[bool] = None,
                  min_float: Optional[float] = None,
                  max_float: Optional[float] = None,
+                 float_decimals: Optional[int] = None,
                  include_cid: Optional[bool] = None,):
     """
-        Returns with-statement context manager for temporary option setting.
+        Returns with-statement context manager for temporary option setting:
+
+        ```py
+            with rand_options(**options):
+                for value in rand_data(num_samples):
+                    ...
+        ```
+
         See `set_rand_options` for the full list of available options.
     """
     # pylint: disable = too-many-locals
@@ -88,7 +112,7 @@ def rand_options(*,
                          min_len=min_len, max_len=max_len,
                          max_nesting=max_nesting, canonical=canonical,
                          min_float=min_float, max_float=max_float,
-                         include_cid=include_cid)
+                         float_decimals=float_decimals, include_cid=include_cid)
         yield
     finally:
         _options = _old_options
@@ -110,9 +134,10 @@ def set_rand_options(*,
                      canonical: Optional[bool] = None,
                      min_float: Optional[float] = None,
                      max_float: Optional[float] = None,
-                     include_cid: Optional[bool] = None,):
+                     float_decimals: Optional[int] = None,
+                     include_cid: Optional[bool] = None,) -> None:
     """
-        Sets random generation options:
+        Permanently sets random generation options:
 
         ```python
         seed: int           # set new random number generator, with this seed
@@ -130,8 +155,10 @@ def set_rand_options(*,
         canonical: bool     # whether `dict` values have canonically ordered keys
         min_float: float    # smallest `float` value
         max_float: float    # largest `float` value
+        float_decimals: int # number of decimals to keep in floats
         include_cid: bool   # whether to generate CID values
         ```
+
     """
     # pylint: disable = too-many-branches, too-many-locals, too-many-statements
     global _options
@@ -141,11 +168,11 @@ def set_rand_options(*,
     if seed is not None:
         _rand = Random(seed)
     if min_int is not None:
-        if min_int < _default_options["min_int"]:
+        if min_int < _min_int:
             raise ValueError("Value for min_int is not a valid CBOR integer.")
         _new_options["min_int"] = min_int
     if max_int is not None:
-        if max_int > _default_options["max_int"]:
+        if max_int > _max_int:
             raise ValueError("Value for max_int is not a valid CBOR integer.")
         _new_options["max_int"] = max_int
     if min_bytes is not None:
@@ -165,11 +192,11 @@ def set_rand_options(*,
             raise ValueError("Value for max_chars is negative.")
         _new_options["max_chars"] = max_chars
     if min_codepoint is not None:
-        if min_codepoint < _default_options["min_codepoint"] or min_codepoint > _default_options["max_codepoint"]:
+        if min_codepoint < _min_codepoint or min_codepoint > _max_codepoint:
             raise ValueError("Value for min_codepoint not a valid utf-8 codepoint.")
         _new_options["min_codepoint"] = min_codepoint
     if max_codepoint is not None:
-        if max_codepoint < _default_options["min_codepoint"] or max_codepoint > _default_options["max_codepoint"]:
+        if max_codepoint < _min_codepoint or max_codepoint > _max_codepoint:
             raise ValueError("Value for max_codepoint not a valid utf-8 codepoint.")
         _new_options["max_codepoint"] = max_codepoint
     if min_len is not None:
@@ -194,6 +221,10 @@ def set_rand_options(*,
         if math.isnan(max_float) or math.isinf(max_float):
             raise ValueError("Value for max_float is not a valid CBOR float.")
         _new_options["max_float"] = max_float
+    if float_decimals is not None:
+        if float_decimals < 0:
+            raise ValueError("Value for float_decimals is negative.")
+        _new_options["float_decimals"] = float_decimals
     if include_cid is not None:
         _new_options["include_cid"] = include_cid
     # pass-through other options with former values
@@ -213,7 +244,7 @@ def set_rand_options(*,
     _options = _new_options
 
 
-def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None):
+def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[EncodableType]:
     """
         Generates a stream of random data data.
         If a number `n` is given, that number of samples is yelded.
@@ -284,6 +315,7 @@ def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
         Generates a stream of random `dict` data.
         If a number `n` is given, that number of samples is yelded.
     """
+    # pylint: disable = too-many-locals, too-many-branches
     if n is not None and n < 0:
         raise ValueError()
     if length is not None and length < 0:
@@ -295,10 +327,38 @@ def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
     min_len = _options["min_len"]
     max_len = _options["max_len"]
     canonical = _options["canonical"]
+    min_chars = _options["min_chars"]
+    max_chars = _options["max_chars"]
+    max_codepoint = _options["max_codepoint"]
+    num_codepoints = max_codepoint-_options["min_codepoint"]
     i = 0
     while n is None or i < n:
         _length = length if length is not None else _rand.randint(min_len, max_len)
-        raw_dict = dict(zip(rand_str(_length), rand_data(_length, max_nesting=max_nesting-1)))
+        # check whether we have enough distinct strings to generate a random dictionary of desired length
+        if num_codepoints == 1:
+            num_strings = max_chars-min_chars+1
+        else:
+            num_strings = (num_codepoints**min_chars)*(num_codepoints**(max_chars-min_chars+1)-1)//(num_codepoints-1)
+        if num_strings < _length:
+            raise ValueError(f"Not enough distinct strings available to make a dictionary of length {_length}")
+        # generate distinct dictionary keys
+        if num_codepoints == 1:
+            key_lengths = _rand.sample(range(min_chars, max_chars+1), _length)
+            keys = [chr(max_codepoint)*l for l in key_lengths]
+        else:
+            keys = []
+            keys_set = set()
+            str_generator = rand_str()
+            while len(keys) < _length:
+                try:
+                    s = next(str_generator)
+                except StopIteration as e:
+                    raise RuntimeError("Random string stream is infinite, this should not happen.") from e
+                if s not in keys_set:
+                    keys.append(s)
+                    keys_set.add(s)
+        # generate dictionary
+        raw_dict = dict(zip(keys, rand_data(_length, max_nesting=max_nesting-1)))
         if canonical:
             yield _canonical_order_dict(raw_dict)
         else:
@@ -389,18 +449,21 @@ def rand_bool_none(n: Optional[int] = None) -> Iterator[Optional[bool]]:
 
 def rand_float(n: Optional[int] = None) -> Iterator[float]:
     """
-        Generates a stream of random `int` data.
+        Generates a stream of random `float` data.
         If a number `n` is given, that number of samples is yelded.
     """
     if n is not None and n < 0:
         raise ValueError()
     min_float = _options["min_float"]
     max_float = _options["max_float"]
+    float_decimals = _options["float_decimals"]
+    eps = 10.0**-float_decimals
     if min_float >= 0 or max_float <= 0:
         # no overflow in `min_float + (max_float-min_float) * random()`, can use `Random.uniform`
         i = 0
         while n is None or i < n:
-            yield _rand.uniform(min_float, max_float)
+            x = _rand.uniform(min_float, max_float)
+            yield x-x%eps
             i += 1
     else:
         # overflow in `min_float + (max_float-min_float) * random()`, cannot use `Random.uniform`
@@ -409,14 +472,21 @@ def rand_float(n: Optional[int] = None) -> Iterator[float]:
             x = 1/(1+max_float/(-min_float))
             # x is (-min_float)/(max_float-min_float), the probability of sampling a number in (-min_float, 0)
             if _rand.random() < x:
-                yield _rand.random()*min_float
+                x = _rand.random()*min_float
             else:
-                yield _rand.random()*max_float
+                x = _rand.random()*max_float
+            yield x-x%eps
             i += 1
 
 def rand_cid(n: Optional[int] = None) -> Iterator[None]:
     """
-        Generates a stream of random `CID` data.
+        Generates a stream of random `CID` data:
+
+        - CID v1
+        - codec 'dag-cbor'
+        - hash function 'sha3-512'
+        - raw digest: 512 random bits
+
         If a number `n` is given, that number of samples is yelded.
     """
     if n is not None and n < 0:

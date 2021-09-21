@@ -37,7 +37,7 @@
 from contextlib import contextmanager
 from hashlib import sha3_512
 import math
-from random import Random
+from random import Random # pylint: disable = import-self
 import sys
 from types import MappingProxyType
 from typing import Any, Dict, Iterator, List, Optional
@@ -45,30 +45,39 @@ from typing import Any, Dict, Iterator, List, Optional
 import cid # type: ignore
 import multihash # type: ignore
 
+from .encoding import EncodableType
 from .utils import _canonical_order_dict
 
+_min_int = -18446744073709551616
+_max_int = 18446744073709551615
+_min_float = -sys.float_info.max
+_max_float = sys.float_info.max
+_min_codepoint = 0x00
+_max_codepoint = 0x10FFFF
+
 _default_options: Dict[str, Any] = {
-    &#34;min_int&#34;: -18446744073709551616,
-    &#34;max_int&#34;: 18446744073709551615,
+    &#34;min_int&#34;: -100,
+    &#34;max_int&#34;: 100,
     &#34;min_bytes&#34;: 0,
-    &#34;max_bytes&#34;: 16,
+    &#34;max_bytes&#34;: 8,
     &#34;min_chars&#34;: 0,
-    &#34;max_chars&#34;: 16,
-    &#34;min_codepoint&#34;: 0x00,
-    &#34;max_codepoint&#34;: 0x10FFFF,
+    &#34;max_chars&#34;: 8,
+    &#34;min_codepoint&#34;: 0x21,
+    &#34;max_codepoint&#34;: 0x7e,
     &#34;min_len&#34;: 0,
     &#34;max_len&#34;: 8,
     &#34;max_nesting&#34;: 2,
     &#34;canonical&#34;: True,
-    &#34;min_float&#34;: -sys.float_info.max,
-    &#34;max_float&#34;: sys.float_info.max,
+    &#34;min_float&#34;: -100,
+    &#34;max_float&#34;: 100,
+    &#34;float_decimals&#34;: 3,
     &#34;include_cid&#34;: True,
 }
 
 _options = _default_options
 _rand = Random(0)
 
-def reset_rand_options():
+def reset_rand_options() -&gt; None:
     &#34;&#34;&#34;
         Resets random generation options to their default values.
     &#34;&#34;&#34;
@@ -77,9 +86,16 @@ def reset_rand_options():
     _options = _default_options
     _rand = Random(0)
 
-def get_options():
-    &#34;&#34;&#34; Get a readonly view of the random generation options. &#34;&#34;&#34;
-    # pylint: disable = global-statement
+def default_options() -&gt; MappingProxyType:
+    &#34;&#34;&#34;
+        Readonly view of the default random generation options.
+    &#34;&#34;&#34;
+    return MappingProxyType(_default_options)
+
+def get_options() -&gt; MappingProxyType:
+    &#34;&#34;&#34;
+        Readonly view of the current random generation options.
+    &#34;&#34;&#34;
     return MappingProxyType(_options)
 
 @contextmanager
@@ -99,9 +115,17 @@ def rand_options(*,
                  canonical: Optional[bool] = None,
                  min_float: Optional[float] = None,
                  max_float: Optional[float] = None,
+                 float_decimals: Optional[int] = None,
                  include_cid: Optional[bool] = None,):
     &#34;&#34;&#34;
-        Returns with-statement context manager for temporary option setting.
+        Returns with-statement context manager for temporary option setting:
+
+        ```py
+            with rand_options(**options):
+                for value in rand_data(num_samples):
+                    ...
+        ```
+
         See `set_rand_options` for the full list of available options.
     &#34;&#34;&#34;
     # pylint: disable = too-many-locals
@@ -118,7 +142,7 @@ def rand_options(*,
                          min_len=min_len, max_len=max_len,
                          max_nesting=max_nesting, canonical=canonical,
                          min_float=min_float, max_float=max_float,
-                         include_cid=include_cid)
+                         float_decimals=float_decimals, include_cid=include_cid)
         yield
     finally:
         _options = _old_options
@@ -140,12 +164,13 @@ def set_rand_options(*,
                      canonical: Optional[bool] = None,
                      min_float: Optional[float] = None,
                      max_float: Optional[float] = None,
-                     include_cid: Optional[bool] = None,):
+                     float_decimals: Optional[int] = None,
+                     include_cid: Optional[bool] = None,) -&gt; None:
     &#34;&#34;&#34;
-        Sets random generation options:
+        Permanently sets random generation options:
 
         ```python
-        seed: int           # reset random number generator, with this seed
+        seed: int           # set new random number generator, with this seed
         min_int: int        # smallest `int` value
         max_int: int        # largest `int` value
         min_bytes: int      # min length of `bytes` value
@@ -160,8 +185,10 @@ def set_rand_options(*,
         canonical: bool     # whether `dict` values have canonically ordered keys
         min_float: float    # smallest `float` value
         max_float: float    # largest `float` value
+        float_decimals: int # number of decimals to keep in floats
         include_cid: bool   # whether to generate CID values
         ```
+
     &#34;&#34;&#34;
     # pylint: disable = too-many-branches, too-many-locals, too-many-statements
     global _options
@@ -171,11 +198,11 @@ def set_rand_options(*,
     if seed is not None:
         _rand = Random(seed)
     if min_int is not None:
-        if min_int &lt; _default_options[&#34;min_int&#34;]:
+        if min_int &lt; _min_int:
             raise ValueError(&#34;Value for min_int is not a valid CBOR integer.&#34;)
         _new_options[&#34;min_int&#34;] = min_int
     if max_int is not None:
-        if max_int &gt; _default_options[&#34;max_int&#34;]:
+        if max_int &gt; _max_int:
             raise ValueError(&#34;Value for max_int is not a valid CBOR integer.&#34;)
         _new_options[&#34;max_int&#34;] = max_int
     if min_bytes is not None:
@@ -195,11 +222,11 @@ def set_rand_options(*,
             raise ValueError(&#34;Value for max_chars is negative.&#34;)
         _new_options[&#34;max_chars&#34;] = max_chars
     if min_codepoint is not None:
-        if min_codepoint &lt; _default_options[&#34;min_codepoint&#34;] or min_codepoint &gt; _default_options[&#34;max_codepoint&#34;]:
+        if min_codepoint &lt; _min_codepoint or min_codepoint &gt; _max_codepoint:
             raise ValueError(&#34;Value for min_codepoint not a valid utf-8 codepoint.&#34;)
         _new_options[&#34;min_codepoint&#34;] = min_codepoint
     if max_codepoint is not None:
-        if max_codepoint &lt; _default_options[&#34;min_codepoint&#34;] or max_codepoint &gt; _default_options[&#34;max_codepoint&#34;]:
+        if max_codepoint &lt; _min_codepoint or max_codepoint &gt; _max_codepoint:
             raise ValueError(&#34;Value for max_codepoint not a valid utf-8 codepoint.&#34;)
         _new_options[&#34;max_codepoint&#34;] = max_codepoint
     if min_len is not None:
@@ -224,6 +251,10 @@ def set_rand_options(*,
         if math.isnan(max_float) or math.isinf(max_float):
             raise ValueError(&#34;Value for max_float is not a valid CBOR float.&#34;)
         _new_options[&#34;max_float&#34;] = max_float
+    if float_decimals is not None:
+        if float_decimals &lt; 0:
+            raise ValueError(&#34;Value for float_decimals is negative.&#34;)
+        _new_options[&#34;float_decimals&#34;] = float_decimals
     if include_cid is not None:
         _new_options[&#34;include_cid&#34;] = include_cid
     # pass-through other options with former values
@@ -243,7 +274,7 @@ def set_rand_options(*,
     _options = _new_options
 
 
-def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None):
+def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -&gt; Iterator[EncodableType]:
     &#34;&#34;&#34;
         Generates a stream of random data data.
         If a number `n` is given, that number of samples is yelded.
@@ -314,6 +345,7 @@ def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
         Generates a stream of random `dict` data.
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
+    # pylint: disable = too-many-locals, too-many-branches
     if n is not None and n &lt; 0:
         raise ValueError()
     if length is not None and length &lt; 0:
@@ -325,10 +357,38 @@ def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
     min_len = _options[&#34;min_len&#34;]
     max_len = _options[&#34;max_len&#34;]
     canonical = _options[&#34;canonical&#34;]
+    min_chars = _options[&#34;min_chars&#34;]
+    max_chars = _options[&#34;max_chars&#34;]
+    max_codepoint = _options[&#34;max_codepoint&#34;]
+    num_codepoints = max_codepoint-_options[&#34;min_codepoint&#34;]
     i = 0
     while n is None or i &lt; n:
         _length = length if length is not None else _rand.randint(min_len, max_len)
-        raw_dict = dict(zip(rand_str(_length), rand_data(_length, max_nesting=max_nesting-1)))
+        # check whether we have enough distinct strings to generate a random dictionary of desired length
+        if num_codepoints == 1:
+            num_strings = max_chars-min_chars+1
+        else:
+            num_strings = (num_codepoints**min_chars)*(num_codepoints**(max_chars-min_chars+1)-1)//(num_codepoints-1)
+        if num_strings &lt; _length:
+            raise ValueError(f&#34;Not enough distinct strings available to make a dictionary of length {_length}&#34;)
+        # generate distinct dictionary keys
+        if num_codepoints == 1:
+            key_lengths = _rand.sample(range(min_chars, max_chars+1), _length)
+            keys = [chr(max_codepoint)*l for l in key_lengths]
+        else:
+            keys = []
+            keys_set = set()
+            str_generator = rand_str()
+            while len(keys) &lt; _length:
+                try:
+                    s = next(str_generator)
+                except StopIteration as e:
+                    raise RuntimeError(&#34;Random string stream is infinite, this should not happen.&#34;) from e
+                if s not in keys_set:
+                    keys.append(s)
+                    keys_set.add(s)
+        # generate dictionary
+        raw_dict = dict(zip(keys, rand_data(_length, max_nesting=max_nesting-1)))
         if canonical:
             yield _canonical_order_dict(raw_dict)
         else:
@@ -419,18 +479,21 @@ def rand_bool_none(n: Optional[int] = None) -&gt; Iterator[Optional[bool]]:
 
 def rand_float(n: Optional[int] = None) -&gt; Iterator[float]:
     &#34;&#34;&#34;
-        Generates a stream of random `int` data.
+        Generates a stream of random `float` data.
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
     if n is not None and n &lt; 0:
         raise ValueError()
     min_float = _options[&#34;min_float&#34;]
     max_float = _options[&#34;max_float&#34;]
+    float_decimals = _options[&#34;float_decimals&#34;]
+    eps = 10.0**-float_decimals
     if min_float &gt;= 0 or max_float &lt;= 0:
         # no overflow in `min_float + (max_float-min_float) * random()`, can use `Random.uniform`
         i = 0
         while n is None or i &lt; n:
-            yield _rand.uniform(min_float, max_float)
+            x = _rand.uniform(min_float, max_float)
+            yield x-x%eps
             i += 1
     else:
         # overflow in `min_float + (max_float-min_float) * random()`, cannot use `Random.uniform`
@@ -439,14 +502,21 @@ def rand_float(n: Optional[int] = None) -&gt; Iterator[float]:
             x = 1/(1+max_float/(-min_float))
             # x is (-min_float)/(max_float-min_float), the probability of sampling a number in (-min_float, 0)
             if _rand.random() &lt; x:
-                yield _rand.random()*min_float
+                x = _rand.random()*min_float
             else:
-                yield _rand.random()*max_float
+                x = _rand.random()*max_float
+            yield x-x%eps
             i += 1
 
 def rand_cid(n: Optional[int] = None) -&gt; Iterator[None]:
     &#34;&#34;&#34;
-        Generates a stream of random `CID` data.
+        Generates a stream of random `CID` data:
+
+        - CID v1
+        - codec &#39;dag-cbor&#39;
+        - hash function &#39;sha3-512&#39;
+        - raw digest: 512 random bits
+
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
     if n is not None and n &lt; 0:
@@ -477,18 +547,35 @@ def rand_cid(n: Optional[int] = None) -&gt; Iterator[None]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="dag_cbor.random.get_options"><code class="name flex">
-<span>def <span class="ident">get_options</span></span>(<span>)</span>
+<dt id="dag_cbor.random.default_options"><code class="name flex">
+<span>def <span class="ident">default_options</span></span>(<span>) ‑> mappingproxy</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get a readonly view of the random generation options.</p></div>
+<div class="desc"><p>Readonly view of the default random generation options.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_options():
-    &#34;&#34;&#34; Get a readonly view of the random generation options. &#34;&#34;&#34;
-    # pylint: disable = global-statement
+<pre><code class="python">def default_options() -&gt; MappingProxyType:
+    &#34;&#34;&#34;
+        Readonly view of the default random generation options.
+    &#34;&#34;&#34;
+    return MappingProxyType(_default_options)</code></pre>
+</details>
+</dd>
+<dt id="dag_cbor.random.get_options"><code class="name flex">
+<span>def <span class="ident">get_options</span></span>(<span>) ‑> mappingproxy</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Readonly view of the current random generation options.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_options() -&gt; MappingProxyType:
+    &#34;&#34;&#34;
+        Readonly view of the current random generation options.
+    &#34;&#34;&#34;
     return MappingProxyType(_options)</code></pre>
 </details>
 </dd>
@@ -572,15 +659,27 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 <span>def <span class="ident">rand_cid</span></span>(<span>n: Optional[int] = None) ‑> Iterator[None]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generates a stream of random <code>CID</code> data.
-If a number <code>n</code> is given, that number of samples is yelded.</p></div>
+<div class="desc"><p>Generates a stream of random <code>CID</code> data:</p>
+<ul>
+<li>CID v1</li>
+<li>codec 'dag-cbor'</li>
+<li>hash function 'sha3-512'</li>
+<li>raw digest: 512 random bits</li>
+</ul>
+<p>If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def rand_cid(n: Optional[int] = None) -&gt; Iterator[None]:
     &#34;&#34;&#34;
-        Generates a stream of random `CID` data.
+        Generates a stream of random `CID` data:
+
+        - CID v1
+        - codec &#39;dag-cbor&#39;
+        - hash function &#39;sha3-512&#39;
+        - raw digest: 512 random bits
+
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
     if n is not None and n &lt; 0:
@@ -605,7 +704,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_data"><code class="name flex">
-<span>def <span class="ident">rand_data</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None)</span>
+<span>def <span class="ident">rand_data</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None) ‑> Iterator[Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random data data.
@@ -622,7 +721,7 @@ maximum nesting level for containers:</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None):
+<pre><code class="python">def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -&gt; Iterator[EncodableType]:
     &#34;&#34;&#34;
         Generates a stream of random data data.
         If a number `n` is given, that number of samples is yelded.
@@ -683,6 +782,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
         Generates a stream of random `dict` data.
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
+    # pylint: disable = too-many-locals, too-many-branches
     if n is not None and n &lt; 0:
         raise ValueError()
     if length is not None and length &lt; 0:
@@ -694,10 +794,38 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
     min_len = _options[&#34;min_len&#34;]
     max_len = _options[&#34;max_len&#34;]
     canonical = _options[&#34;canonical&#34;]
+    min_chars = _options[&#34;min_chars&#34;]
+    max_chars = _options[&#34;max_chars&#34;]
+    max_codepoint = _options[&#34;max_codepoint&#34;]
+    num_codepoints = max_codepoint-_options[&#34;min_codepoint&#34;]
     i = 0
     while n is None or i &lt; n:
         _length = length if length is not None else _rand.randint(min_len, max_len)
-        raw_dict = dict(zip(rand_str(_length), rand_data(_length, max_nesting=max_nesting-1)))
+        # check whether we have enough distinct strings to generate a random dictionary of desired length
+        if num_codepoints == 1:
+            num_strings = max_chars-min_chars+1
+        else:
+            num_strings = (num_codepoints**min_chars)*(num_codepoints**(max_chars-min_chars+1)-1)//(num_codepoints-1)
+        if num_strings &lt; _length:
+            raise ValueError(f&#34;Not enough distinct strings available to make a dictionary of length {_length}&#34;)
+        # generate distinct dictionary keys
+        if num_codepoints == 1:
+            key_lengths = _rand.sample(range(min_chars, max_chars+1), _length)
+            keys = [chr(max_codepoint)*l for l in key_lengths]
+        else:
+            keys = []
+            keys_set = set()
+            str_generator = rand_str()
+            while len(keys) &lt; _length:
+                try:
+                    s = next(str_generator)
+                except StopIteration as e:
+                    raise RuntimeError(&#34;Random string stream is infinite, this should not happen.&#34;) from e
+                if s not in keys_set:
+                    keys.append(s)
+                    keys_set.add(s)
+        # generate dictionary
+        raw_dict = dict(zip(keys, rand_data(_length, max_nesting=max_nesting-1)))
         if canonical:
             yield _canonical_order_dict(raw_dict)
         else:
@@ -709,7 +837,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 <span>def <span class="ident">rand_float</span></span>(<span>n: Optional[int] = None) ‑> Iterator[float]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generates a stream of random <code>int</code> data.
+<div class="desc"><p>Generates a stream of random <code>float</code> data.
 If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 <details class="source">
 <summary>
@@ -717,18 +845,21 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </summary>
 <pre><code class="python">def rand_float(n: Optional[int] = None) -&gt; Iterator[float]:
     &#34;&#34;&#34;
-        Generates a stream of random `int` data.
+        Generates a stream of random `float` data.
         If a number `n` is given, that number of samples is yelded.
     &#34;&#34;&#34;
     if n is not None and n &lt; 0:
         raise ValueError()
     min_float = _options[&#34;min_float&#34;]
     max_float = _options[&#34;max_float&#34;]
+    float_decimals = _options[&#34;float_decimals&#34;]
+    eps = 10.0**-float_decimals
     if min_float &gt;= 0 or max_float &lt;= 0:
         # no overflow in `min_float + (max_float-min_float) * random()`, can use `Random.uniform`
         i = 0
         while n is None or i &lt; n:
-            yield _rand.uniform(min_float, max_float)
+            x = _rand.uniform(min_float, max_float)
+            yield x-x%eps
             i += 1
     else:
         # overflow in `min_float + (max_float-min_float) * random()`, cannot use `Random.uniform`
@@ -737,9 +868,10 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
             x = 1/(1+max_float/(-min_float))
             # x is (-min_float)/(max_float-min_float), the probability of sampling a number in (-min_float, 0)
             if _rand.random() &lt; x:
-                yield _rand.random()*min_float
+                x = _rand.random()*min_float
             else:
-                yield _rand.random()*max_float
+                x = _rand.random()*max_float
+            yield x-x%eps
             i += 1</code></pre>
 </details>
 </dd>
@@ -801,11 +933,15 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_options"><code class="name flex">
-<span>def <span class="ident">rand_options</span></span>(<span>*, seed: Optional[int] = None, min_int: Optional[int] = None, max_int: Optional[int] = None, min_bytes: Optional[int] = None, max_bytes: Optional[int] = None, min_chars: Optional[int] = None, max_chars: Optional[int] = None, min_codepoint: Optional[int] = None, max_codepoint: Optional[int] = None, min_len: Optional[int] = None, max_len: Optional[int] = None, max_nesting: Optional[int] = None, canonical: Optional[bool] = None, min_float: Optional[float] = None, max_float: Optional[float] = None, include_cid: Optional[bool] = None)</span>
+<span>def <span class="ident">rand_options</span></span>(<span>*, seed: Optional[int] = None, min_int: Optional[int] = None, max_int: Optional[int] = None, min_bytes: Optional[int] = None, max_bytes: Optional[int] = None, min_chars: Optional[int] = None, max_chars: Optional[int] = None, min_codepoint: Optional[int] = None, max_codepoint: Optional[int] = None, min_len: Optional[int] = None, max_len: Optional[int] = None, max_nesting: Optional[int] = None, canonical: Optional[bool] = None, min_float: Optional[float] = None, max_float: Optional[float] = None, float_decimals: Optional[int] = None, include_cid: Optional[bool] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns with-statement context manager for temporary option setting.
-See <code><a title="dag_cbor.random.set_rand_options" href="#dag_cbor.random.set_rand_options">set_rand_options()</a></code> for the full list of available options.</p></div>
+<div class="desc"><p>Returns with-statement context manager for temporary option setting:</p>
+<pre><code class="language-py">    with rand_options(**options):
+        for value in rand_data(num_samples):
+            ...
+</code></pre>
+<p>See <code><a title="dag_cbor.random.set_rand_options" href="#dag_cbor.random.set_rand_options">set_rand_options()</a></code> for the full list of available options.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -827,9 +963,17 @@ def rand_options(*,
                  canonical: Optional[bool] = None,
                  min_float: Optional[float] = None,
                  max_float: Optional[float] = None,
+                 float_decimals: Optional[int] = None,
                  include_cid: Optional[bool] = None,):
     &#34;&#34;&#34;
-        Returns with-statement context manager for temporary option setting.
+        Returns with-statement context manager for temporary option setting:
+
+        ```py
+            with rand_options(**options):
+                for value in rand_data(num_samples):
+                    ...
+        ```
+
         See `set_rand_options` for the full list of available options.
     &#34;&#34;&#34;
     # pylint: disable = too-many-locals
@@ -846,7 +990,7 @@ def rand_options(*,
                          min_len=min_len, max_len=max_len,
                          max_nesting=max_nesting, canonical=canonical,
                          min_float=min_float, max_float=max_float,
-                         include_cid=include_cid)
+                         float_decimals=float_decimals, include_cid=include_cid)
         yield
     finally:
         _options = _old_options
@@ -890,7 +1034,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.reset_rand_options"><code class="name flex">
-<span>def <span class="ident">reset_rand_options</span></span>(<span>)</span>
+<span>def <span class="ident">reset_rand_options</span></span>(<span>) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resets random generation options to their default values.</p></div>
@@ -898,7 +1042,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def reset_rand_options():
+<pre><code class="python">def reset_rand_options() -&gt; None:
     &#34;&#34;&#34;
         Resets random generation options to their default values.
     &#34;&#34;&#34;
@@ -909,11 +1053,11 @@ If a number <code>n</code> is given, that number of samples is yelded.</p></div>
 </details>
 </dd>
 <dt id="dag_cbor.random.set_rand_options"><code class="name flex">
-<span>def <span class="ident">set_rand_options</span></span>(<span>*, seed: Optional[int] = None, min_int: Optional[int] = None, max_int: Optional[int] = None, min_bytes: Optional[int] = None, max_bytes: Optional[int] = None, min_chars: Optional[int] = None, max_chars: Optional[int] = None, min_codepoint: Optional[int] = None, max_codepoint: Optional[int] = None, min_len: Optional[int] = None, max_len: Optional[int] = None, max_nesting: Optional[int] = None, canonical: Optional[bool] = None, min_float: Optional[float] = None, max_float: Optional[float] = None, include_cid: Optional[bool] = None)</span>
+<span>def <span class="ident">set_rand_options</span></span>(<span>*, seed: Optional[int] = None, min_int: Optional[int] = None, max_int: Optional[int] = None, min_bytes: Optional[int] = None, max_bytes: Optional[int] = None, min_chars: Optional[int] = None, max_chars: Optional[int] = None, min_codepoint: Optional[int] = None, max_codepoint: Optional[int] = None, min_len: Optional[int] = None, max_len: Optional[int] = None, max_nesting: Optional[int] = None, canonical: Optional[bool] = None, min_float: Optional[float] = None, max_float: Optional[float] = None, float_decimals: Optional[int] = None, include_cid: Optional[bool] = None) ‑> None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sets random generation options:</p>
-<pre><code class="language-python">seed: int           # reset random number generator, with this seed
+<div class="desc"><p>Permanently sets random generation options:</p>
+<pre><code class="language-python">seed: int           # set new random number generator, with this seed
 min_int: int        # smallest `int` value
 max_int: int        # largest `int` value
 min_bytes: int      # min length of `bytes` value
@@ -928,6 +1072,7 @@ max_nesting: int    # max nesting of collections
 canonical: bool     # whether `dict` values have canonically ordered keys
 min_float: float    # smallest `float` value
 max_float: float    # largest `float` value
+float_decimals: int # number of decimals to keep in floats
 include_cid: bool   # whether to generate CID values
 </code></pre></div>
 <details class="source">
@@ -950,12 +1095,13 @@ include_cid: bool   # whether to generate CID values
                      canonical: Optional[bool] = None,
                      min_float: Optional[float] = None,
                      max_float: Optional[float] = None,
-                     include_cid: Optional[bool] = None,):
+                     float_decimals: Optional[int] = None,
+                     include_cid: Optional[bool] = None,) -&gt; None:
     &#34;&#34;&#34;
-        Sets random generation options:
+        Permanently sets random generation options:
 
         ```python
-        seed: int           # reset random number generator, with this seed
+        seed: int           # set new random number generator, with this seed
         min_int: int        # smallest `int` value
         max_int: int        # largest `int` value
         min_bytes: int      # min length of `bytes` value
@@ -970,8 +1116,10 @@ include_cid: bool   # whether to generate CID values
         canonical: bool     # whether `dict` values have canonically ordered keys
         min_float: float    # smallest `float` value
         max_float: float    # largest `float` value
+        float_decimals: int # number of decimals to keep in floats
         include_cid: bool   # whether to generate CID values
         ```
+
     &#34;&#34;&#34;
     # pylint: disable = too-many-branches, too-many-locals, too-many-statements
     global _options
@@ -981,11 +1129,11 @@ include_cid: bool   # whether to generate CID values
     if seed is not None:
         _rand = Random(seed)
     if min_int is not None:
-        if min_int &lt; _default_options[&#34;min_int&#34;]:
+        if min_int &lt; _min_int:
             raise ValueError(&#34;Value for min_int is not a valid CBOR integer.&#34;)
         _new_options[&#34;min_int&#34;] = min_int
     if max_int is not None:
-        if max_int &gt; _default_options[&#34;max_int&#34;]:
+        if max_int &gt; _max_int:
             raise ValueError(&#34;Value for max_int is not a valid CBOR integer.&#34;)
         _new_options[&#34;max_int&#34;] = max_int
     if min_bytes is not None:
@@ -1005,11 +1153,11 @@ include_cid: bool   # whether to generate CID values
             raise ValueError(&#34;Value for max_chars is negative.&#34;)
         _new_options[&#34;max_chars&#34;] = max_chars
     if min_codepoint is not None:
-        if min_codepoint &lt; _default_options[&#34;min_codepoint&#34;] or min_codepoint &gt; _default_options[&#34;max_codepoint&#34;]:
+        if min_codepoint &lt; _min_codepoint or min_codepoint &gt; _max_codepoint:
             raise ValueError(&#34;Value for min_codepoint not a valid utf-8 codepoint.&#34;)
         _new_options[&#34;min_codepoint&#34;] = min_codepoint
     if max_codepoint is not None:
-        if max_codepoint &lt; _default_options[&#34;min_codepoint&#34;] or max_codepoint &gt; _default_options[&#34;max_codepoint&#34;]:
+        if max_codepoint &lt; _min_codepoint or max_codepoint &gt; _max_codepoint:
             raise ValueError(&#34;Value for max_codepoint not a valid utf-8 codepoint.&#34;)
         _new_options[&#34;max_codepoint&#34;] = max_codepoint
     if min_len is not None:
@@ -1034,6 +1182,10 @@ include_cid: bool   # whether to generate CID values
         if math.isnan(max_float) or math.isinf(max_float):
             raise ValueError(&#34;Value for max_float is not a valid CBOR float.&#34;)
         _new_options[&#34;max_float&#34;] = max_float
+    if float_decimals is not None:
+        if float_decimals &lt; 0:
+            raise ValueError(&#34;Value for float_decimals is negative.&#34;)
+        _new_options[&#34;float_decimals&#34;] = float_decimals
     if include_cid is not None:
         _new_options[&#34;include_cid&#34;] = include_cid
     # pass-through other options with former values
@@ -1071,6 +1223,7 @@ include_cid: bool   # whether to generate CID values
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
+<li><code><a title="dag_cbor.random.default_options" href="#dag_cbor.random.default_options">default_options</a></code></li>
 <li><code><a title="dag_cbor.random.get_options" href="#dag_cbor.random.get_options">get_options</a></code></li>
 <li><code><a title="dag_cbor.random.rand_bool" href="#dag_cbor.random.rand_bool">rand_bool</a></code></li>
 <li><code><a title="dag_cbor.random.rand_bool_none" href="#dag_cbor.random.rand_bool_none">rand_bool_none</a></code></li>
