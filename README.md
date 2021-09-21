@@ -57,8 +57,8 @@ The `random` module contains functions to generate random data compatible with D
 - `float` for uniformly distributed floats, with fixed decimals
 - `bytes` for byte-strings of uniformly distributed length, with uniformly distributed bytes
 - `str` for strings of uniformly distributed length, with uniformly distributed codepoints (all valid UTF-8 strings, by rejection sampling)
-- `bool` for 50%-50% `False` or `True`
-- `bool_none` for 33%-33%-33% `False`, `True` or `None`
+- `bool` for `False` or `True` (50% each)
+- `bool_none` for `False`, `True` or `None` (33.3% each)
 - `list` for lists of uniformly distributed length, with random elements of any type
 - `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
 - `cid` for CID data (instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package)
