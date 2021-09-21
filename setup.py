@@ -7,10 +7,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dag-cbor",
-    version="0.0.5",
+    version="0.0.5post1",
     author="hashberg",
     author_email="sg495@users.noreply.github.com",
-    url="https://github.com/hashberg-io/py-dag-cbor",
+    url="https://github.com/hashberg-io/dag-cbor",
     description="Python implementation of the DAG-CBOR codec.",
     long_description=long_description,
     long_description_content_type="text/markdown",
