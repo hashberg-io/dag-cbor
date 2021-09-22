@@ -53,7 +53,7 @@ A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed
 b'\xa2aa\x0cabfhello!'
 ```
 
- A buffered binary stream can be passed to the decode function instead of a `bytes` object, in which case the contents of the stream are read in their entirety and decoded:
+A buffered binary stream can be passed to the `decode` function instead of a `bytes` object, in which case the contents of the stream are read in their entirety and decoded:
 
 ```python
 >>> mystream = BytesIO(b'\xa2aa\x0cabfhello!')
