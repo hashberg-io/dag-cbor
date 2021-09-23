@@ -41,41 +41,7 @@ b'\xa2aa\x0cabfhello!'
 {'a': 12, 'b': 'hello!'}
 ```
 
-### With Binary Streams
-
-A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed to the `encode` function using the optional keyword argument `stream`, in which case the encoded bytes are written to the stream rather than returned:
-
-```python
->>> from io import BytesIO
->>> mystream = BytesIO()
->>> dag_cbor.encode({'a': 12, 'b': 'hello!'}, stream=mystream)
->>> mystream.getvalue()
-b'\xa2aa\x0cabfhello!'
-```
-
-A buffered binary stream can be passed to the `decode` function instead of a `bytes` object, in which case the contents of the stream are read in their entirety and decoded:
-
-```python
->>> mystream = BytesIO(b'\xa2aa\x0cabfhello!')
->>> dag_cbor.decode(mystream)
-{'a': 12, 'b': 'hello!'}
-```
-
-### Generating Random Data
-
-The `random` module contains functions to generate random data compatible with DAG-CBOR encoding. The functions are named `rand_X`, where `X` is one of:
-
-- `int` for uniformly distributed integers
-- `float` for uniformly distributed floats, with fixed decimals
-- `bytes` for byte-strings of uniformly distributed length, with uniformly distributed bytes
-- `str` for strings of uniformly distributed length, with uniformly distributed codepoints (all valid UTF-8 strings, by rejection sampling)
-- `bool` for `False` or `True` (50% each)
-- `bool_none` for `False`, `True` or `None` (33.3% each)
-- `list` for lists of uniformly distributed length, with random elements of any type
-- `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
-- `cid` for CID data (instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package)
-
-The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`:
+The `random` module contains functions to generate random data compatible with DAG-CBOR encoding:
 
 ```python
 >>> import pprint
@@ -102,7 +68,7 @@ The function call `rand_X(n)` returns an iterator yielding a stream of `n` rando
 {'': 11, 'B': True, 'FWD': {}, 'GXZBVAR': 'BTDWMGI', 'TDICHC': 87}
 ```
 
-The function call `rand_X()`, without the positional argument `n`, would instead yield an infinite stream of random values. The `rand_options(**options)` context manager is used to set options temporarily: in the example above, we set string characters to be uppercase alphabetic (codepoints `0x41`-`0x5a`) and we excluded CID values from being generated. For the full list of functions and options, please refer to the [`dag_cbor.random` documentation](https://hashberg-io.github.io/py-dag-cbor/dag_cbor/random.html).
+For further information, please refer to the [API documentation](#api).
 
 
 ## API

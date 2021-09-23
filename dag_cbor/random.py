@@ -1,5 +1,76 @@
 """
-    Generation of random data valid for DAG-CBOR encoding.
+    The `dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
+
+    The functions are named `rand_X`, where `X` is one of:
+
+    - `int` for uniformly distributed integers
+    - `float` for uniformly distributed floats, with fixed decimals
+    - `bytes` for byte-strings of uniformly distributed length, with uniformly distributed bytes
+    - `str` for strings of uniformly distributed length, with uniformly distributed codepoints (all valid UTF-8 strings, by rejection sampling)
+    - `bool` for `False` or `True` (50% each)
+    - `bool_none` for `False`, `True` or `None` (33.3% each)
+    - `list` for lists of uniformly distributed length, with random elements of any type
+    - `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
+    - `cid` for CID data (instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package)
+
+    The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`, e.g.:
+
+    ```python
+        >>> import pprint
+        >>> import dag_cbor
+        >>> kwargs = dict(min_codepoint=0x41, max_codepoint=0x5a, include_cid=False)
+        >>> with dag_cbor.random.options(**kwargs):
+        ...     for d in dag_cbor.random.rand_dict(3):
+        ...             pprint.pp(d)
+        ...
+        {'BIQPMZ': b'\x85\x1f\x07/\xcc\x00\xfc\xaa',
+         'EJEYDTZI': {},
+         'PLSG': {'G': 'JFG',
+                  'HZE': -61.278,
+                  'JWDRKRGZ': b'-',
+                  'OCCKQPDJ': True,
+                  'SJOCTZMK': False},
+         'PRDLN': 39.129,
+         'TUGRP': None,
+         'WZTEJDXC': -69.933}
+        {'GHAXI': 39.12,
+         'PVUWZLC': 4.523,
+         'TDPSU': 'TVCADUGT',
+         'ZHGVSNSI': [-57, 9, -78.312]}
+        {'': 11, 'B': True, 'FWD': {}, 'GXZBVAR': 'BTDWMGI', 'TDICHC': 87}
+    ```
+
+    The function call `rand_X()`, without the positional argument `n`, instead yields an infinite stream of random values.
+
+    The `options(**kwargs)` context manager is used to set options temporarily, within the scope of a `with` directive:
+    in the example above, we set string characters to be uppercase alphabetic (codepoints `0x41`-`0x5a`) and we excluded CID
+    values from being generated (for additional clarity in the example).
+    Options can be set with `set_options(**kwargs)` and reset with `reset_options()`. A read-only view on options can be obtained
+    from `get_options()`, and a read-only view on default options can be obtained from `default_options()`:
+
+    ```py
+        >>> import pprint
+        >>> import dag_cbor
+        >>> pprint.pp(dag_cbor.random.default_options())
+        mappingproxy({'min_int': -100,
+                      'max_int': 100,
+                      'min_bytes': 0,
+                      'max_bytes': 8,
+                      'min_chars': 0,
+                      'max_chars': 8,
+                      'min_codepoint': 33,
+                      'max_codepoint': 126,
+                      'min_len': 0,
+                      'max_len': 8,
+                      'max_nesting': 2,
+                      'canonical': True,
+                      'min_float': -100.0,
+                      'max_float': 100.0,
+                      'float_decimals': 3,
+                      'include_cid': True})
+    ```
+
+    See `set_options` for a description of the options.
 """
 # pylint: disable = global-statement
 
@@ -38,8 +109,8 @@ _default_options: Dict[str, Any] = {
     "max_len": 8,
     "max_nesting": 2,
     "canonical": True,
-    "min_float": -100,
-    "max_float": 100,
+    "min_float": -100.0,
+    "max_float": 100.0,
     "float_decimals": 3,
     "include_cid": True,
 }
@@ -47,7 +118,7 @@ _default_options: Dict[str, Any] = {
 _options = _default_options
 _rand = Random(0)
 
-def reset_rand_options() -> None:
+def reset_options() -> None:
     """
         Resets random generation options to their default values.
     """
@@ -69,34 +140,34 @@ def get_options() -> MappingProxyType:
     return MappingProxyType(_options)
 
 @contextmanager
-def rand_options(*,
-                 seed: Optional[int] = None,
-                 min_int: Optional[int] = None,
-                 max_int: Optional[int] = None,
-                 min_bytes: Optional[int] = None,
-                 max_bytes: Optional[int] = None,
-                 min_chars: Optional[int] = None,
-                 max_chars: Optional[int] = None,
-                 min_codepoint: Optional[int] = None,
-                 max_codepoint: Optional[int] = None,
-                 min_len: Optional[int] = None,
-                 max_len: Optional[int] = None,
-                 max_nesting: Optional[int] = None,
-                 canonical: Optional[bool] = None,
-                 min_float: Optional[float] = None,
-                 max_float: Optional[float] = None,
-                 float_decimals: Optional[int] = None,
-                 include_cid: Optional[bool] = None,):
+def options(*,
+            seed: Optional[int] = None,
+            min_int: Optional[int] = None,
+            max_int: Optional[int] = None,
+            min_bytes: Optional[int] = None,
+            max_bytes: Optional[int] = None,
+            min_chars: Optional[int] = None,
+            max_chars: Optional[int] = None,
+            min_codepoint: Optional[int] = None,
+            max_codepoint: Optional[int] = None,
+            min_len: Optional[int] = None,
+            max_len: Optional[int] = None,
+            max_nesting: Optional[int] = None,
+            canonical: Optional[bool] = None,
+            min_float: Optional[float] = None,
+            max_float: Optional[float] = None,
+            float_decimals: Optional[int] = None,
+            include_cid: Optional[bool] = None,):
     """
         Returns with-statement context manager for temporary option setting:
 
         ```py
-            with rand_options(**options):
+            with options(**options):
                 for value in rand_data(num_samples):
                     ...
         ```
 
-        See `set_rand_options` for the full list of available options.
+        See `set_options` for a description of the options.
     """
     # pylint: disable = too-many-locals
     global _options
@@ -104,59 +175,59 @@ def rand_options(*,
     try:
         _old_options = _options
         _old_rand = _rand
-        set_rand_options(seed=seed,
-                         min_int=min_int, max_int=max_int,
-                         min_bytes=min_bytes, max_bytes=max_bytes,
-                         min_chars=min_chars, max_chars=max_chars,
-                         min_codepoint=min_codepoint, max_codepoint=max_codepoint,
-                         min_len=min_len, max_len=max_len,
-                         max_nesting=max_nesting, canonical=canonical,
-                         min_float=min_float, max_float=max_float,
-                         float_decimals=float_decimals, include_cid=include_cid)
+        set_options(seed=seed,
+                    min_int=min_int, max_int=max_int,
+                    min_bytes=min_bytes, max_bytes=max_bytes,
+                    min_chars=min_chars, max_chars=max_chars,
+                    min_codepoint=min_codepoint, max_codepoint=max_codepoint,
+                    min_len=min_len, max_len=max_len,
+                    max_nesting=max_nesting, canonical=canonical,
+                    min_float=min_float, max_float=max_float,
+                    float_decimals=float_decimals, include_cid=include_cid)
         yield
     finally:
         _options = _old_options
         _rand = _old_rand
 
-def set_rand_options(*,
-                     seed: Optional[int] = None,
-                     min_int: Optional[int] = None,
-                     max_int: Optional[int] = None,
-                     min_bytes: Optional[int] = None,
-                     max_bytes: Optional[int] = None,
-                     min_chars: Optional[int] = None,
-                     max_chars: Optional[int] = None,
-                     min_codepoint: Optional[int] = None,
-                     max_codepoint: Optional[int] = None,
-                     min_len: Optional[int] = None,
-                     max_len: Optional[int] = None,
-                     max_nesting: Optional[int] = None,
-                     canonical: Optional[bool] = None,
-                     min_float: Optional[float] = None,
-                     max_float: Optional[float] = None,
-                     float_decimals: Optional[int] = None,
-                     include_cid: Optional[bool] = None,) -> None:
+def set_options(*,
+                seed: Optional[int] = None,
+                min_int: Optional[int] = None,
+                max_int: Optional[int] = None,
+                min_bytes: Optional[int] = None,
+                max_bytes: Optional[int] = None,
+                min_chars: Optional[int] = None,
+                max_chars: Optional[int] = None,
+                min_codepoint: Optional[int] = None,
+                max_codepoint: Optional[int] = None,
+                min_len: Optional[int] = None,
+                max_len: Optional[int] = None,
+                max_nesting: Optional[int] = None,
+                canonical: Optional[bool] = None,
+                min_float: Optional[float] = None,
+                max_float: Optional[float] = None,
+                float_decimals: Optional[int] = None,
+                include_cid: Optional[bool] = None,) -> None:
     """
         Permanently sets random generation options:
 
         ```python
-        seed: int           # set new random number generator, with this seed
-        min_int: int        # smallest `int` value
-        max_int: int        # largest `int` value
-        min_bytes: int      # min length of `bytes` value
-        max_bytes: int      # max length of `bytes` value
-        min_chars: int      # min length of `str` value
-        max_chars: int      # max length of `str` value
-        min_codepoint: int  # min utf-8 codepoint in `str` value
-        max_codepoint: int  # max utf-8 codepoint in `str` value
-        min_len: int        # min length of `list` and `dict` values
-        max_len: int        # max length of `list` and `dict` values
-        max_nesting: int    # max nesting of collections
-        canonical: bool     # whether `dict` values have canonically ordered keys
-        min_float: float    # smallest `float` value
-        max_float: float    # largest `float` value
-        float_decimals: int # number of decimals to keep in floats
-        include_cid: bool   # whether to generate CID values
+            seed: int           # set new random number generator, with this seed
+            min_int: int        # smallest `int` value
+            max_int: int        # largest `int` value
+            min_bytes: int      # min length of `bytes` value
+            max_bytes: int      # max length of `bytes` value
+            min_chars: int      # min length of `str` value
+            max_chars: int      # max length of `str` value
+            min_codepoint: int  # min utf-8 codepoint in `str` value
+            max_codepoint: int  # max utf-8 codepoint in `str` value
+            min_len: int        # min length of `list` and `dict` values
+            max_len: int        # max length of `list` and `dict` values
+            max_nesting: int    # max nesting of collections
+            canonical: bool     # whether `dict` values have canonically ordered keys
+            min_float: float    # smallest `float` value
+            max_float: float    # largest `float` value
+            float_decimals: int # number of decimals to keep in floats
+            include_cid: bool   # whether to generate CID values
         ```
 
     """
@@ -293,6 +364,16 @@ def rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
     """
         Generates a stream of random `list` data.
         If a number `n` is given, that number of samples is yelded.
+
+        The optional `length` keyword argument can be used to fix a length for the lists generated.
+
+        The optional `max_nesting` keyword argument can be used to explicitly set the
+        maximum nesting level for containers:
+
+        - the value `None` (default) is replaced with the integer value `get_options()["max_nesting"]`
+        - the integer value 0 means no containers will be generated as items
+        - integer values > 0 mean that containers will be generated as items, with maximum nesting level `max_nesting-1`
+        - no other values are valid
     """
     if n is not None and n < 0:
         raise ValueError()
@@ -314,6 +395,16 @@ def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
     """
         Generates a stream of random `dict` data.
         If a number `n` is given, that number of samples is yelded.
+
+        The optional `length` keyword argument can be used to fix a length for the dictionaries generated.
+
+        The optional `max_nesting` keyword argument can be used to explicitly set the
+        maximum nesting level for containers:
+
+        - the value `None` (default) is replaced with the integer value `get_options()["max_nesting"]`
+        - the integer value 0 means no containers will be generated as values
+        - integer values > 0 mean that containers will be generated as values, with maximum nesting level `max_nesting-1`
+        - no other values are valid
     """
     # pylint: disable = too-many-locals, too-many-branches
     if n is not None and n < 0:
@@ -383,6 +474,8 @@ def rand_bytes(n: Optional[int] = None, *, length: Optional[int] = None) -> Iter
     """
         Generates a stream of random `bytes` data.
         If a number `n` is given, that number of samples is yelded.
+
+        The optional `length` keyword argument can be used to fix the number of bytes generated.
     """
     if n is not None and n < 0:
         raise ValueError()
@@ -400,6 +493,8 @@ def rand_str(n: Optional[int] = None, *, length: Optional[int] = None) -> Iterat
     """
         Generates a stream of random `str` data.
         If a number `n` is given, that number of samples is yelded.
+
+        The optional `length` keyword argument can be used to fix the number of characters generated.
     """
     if n is not None and n < 0:
         raise ValueError()

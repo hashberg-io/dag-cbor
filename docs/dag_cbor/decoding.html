@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>dag_cbor.decoding API documentation</title>
-<meta name="description" content="Deconding functions for DAG-CBOR codec." />
+<meta name="description" content="Deconding function for DAG-CBOR codec …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,42 +23,122 @@
 <h1 class="title">Module <code>dag_cbor.decoding</code></h1>
 </header>
 <section id="section-intro">
-<p>Deconding functions for DAG-CBOR codec.</p>
+<p>Deconding function for DAG-CBOR codec.</p>
+<p>The core functionality is performed by the <code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode()</a></code> function, which decodes <code>bytes</code> into a value:</p>
+<pre><code class="language-python">    &gt;&gt;&gt; import dag_cbor
+    &gt;&gt;&gt; dag_cbor.decode(b'¢aaabfhello!')
+    {'a': 12, 'b': 'hello!'}
+</code></pre>
+<p>A buffered binary stream (i.e. an instance of <code>io.BufferedIOBase</code>) can be passed to the <code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode()</a></code> function
+instead of a <code>bytes</code> object, in which case the contents of the stream are read in their entirety and decoded:</p>
+<pre><code class="language-python">    &gt;&gt;&gt; mystream = BytesIO(b'¢aaabfhello!')
+    &gt;&gt;&gt; dag_cbor.decode(mystream)
+    {'a': 12, 'b': 'hello!'}
+</code></pre>
+<p>The decision to read the entirety of the stream stems from the <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR codec</a>
+specification, stating that encoding and decoding is only allowed on a single top-level item.
+However, the optional keyword argument <code>allow_concat</code> (default <code>False</code>) can be set to <code>True</code> to disable this behaviour
+and allow only part of the stream to be decoded.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-    Deconding functions for DAG-CBOR codec.
+    Deconding function for DAG-CBOR codec.
+
+    The core functionality is performed by the `decode` function, which decodes `bytes` into a value:
+
+    ```python
+        &gt;&gt;&gt; import dag_cbor
+        &gt;&gt;&gt; dag_cbor.decode(b&#39;\xa2aa\x0cabfhello!&#39;)
+        {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
+    ```
+
+    A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed to the `decode` function
+    instead of a `bytes` object, in which case the contents of the stream are read in their entirety and decoded:
+
+    ```python
+        &gt;&gt;&gt; mystream = BytesIO(b&#39;\xa2aa\x0cabfhello!&#39;)
+        &gt;&gt;&gt; dag_cbor.decode(mystream)
+        {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
+    ```
+
+    The decision to read the entirety of the stream stems from the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/)
+    specification, stating that encoding and decoding is only allowed on a single top-level item.
+    However, the optional keyword argument `allow_concat` (default `False`) can be set to `True` to disable this behaviour
+    and allow only part of the stream to be decoded.
 &#34;&#34;&#34;
 
 from io import BufferedIOBase, BytesIO
 import math
 import struct
-from typing import Optional, Tuple, Union
+from typing import Callable, Optional, Tuple, Union
 
 import cid # type: ignore
 
 from .encoding import EncodableType
 from .utils import CBORDecodingError, DAGCBORDecodingError
 
-def decode(stream_or_bytes: Union[BufferedIOBase, bytes]) -&gt; EncodableType:
+
+def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
+           allow_concat: bool = False,
+           callback: Optional[Callable[[EncodableType, int], None]] = None) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
+
+        The optional keyword argument `allow_cocatenation` (default `False`) can be set to `True` to allow only
+        part of the stream to be decoded: if set to `False`, the whole stream will be read and any bytes not used
+        in the decoding will cause a `DAGCBORDecodingError` to be raised.
+
+        The optional keyword argument `callback` (default `None`) can be set to a function
+        `fun: Callable[[EncodableType, int], None]` which is invoked as `f(item, num_bytes_read)` every time an item
+        is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:
+
+        ```py
+            &gt;&gt;&gt; import dag_cbor
+            &gt;&gt;&gt; from io import BytesIO
+            &gt;&gt;&gt; class BytesReadCounter:
+            ...     _num_bytes_read = 0
+            ...     def __call__(self, _, num_bytes_read):
+            ...         self._num_bytes_read += num_bytes_read
+            ...     def __int__(self):
+            ...         return self._num_bytes_read
+            ...
+            &gt;&gt;&gt; encoded_bytes = b&#39;\xa2aa\x0cabfhello!\x82\x00\x01&#39;
+            &gt;&gt;&gt; len(encoded_bytes)
+            16
+            &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
+            &gt;&gt;&gt; bytes_read_cnt = BytesReadCounter()
+            &gt;&gt;&gt; dag_cbor.decode(stream, allow_concat=True, callback=bytes_read_cnt)
+            {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
+            &gt;&gt;&gt; int(bytes_read_cnt)
+            13
+            &gt;&gt;&gt; bytes_remaining = stream.read()
+            &gt;&gt;&gt; bytes_remaining
+            b&#39;\x82\x00\x01&#39;
+            &gt;&gt;&gt; len(bytes_remaining)
+            3
+            &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
+            [0, 1]
+        ```
     &#34;&#34;&#34;
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
         stream = stream_or_bytes
-    data = _decode_item(stream)
+    data, _ = _decode_item(stream, callback=callback)
+    if allow_concat:
+        return data
     remaining_bytes = stream.read()
     if len(remaining_bytes) &gt; 0:
         raise DAGCBORDecodingError(&#34;Encode and decode must operate on a single top-level CBOR object&#34;)
     return data
 
-def _decode_item(stream: BufferedIOBase) -&gt; EncodableType:
-    # pylint: disable = too-many-return-statements
-    major_type, arg = _decode_head(stream)
+def _decode_item(stream: BufferedIOBase, *,
+                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[EncodableType, int]:
+    # pylint: disable = too-many-return-statements, too-many-branches
+    major_type, arg, num_bytes_read = _decode_head(stream)
+    ret: Optional[Tuple[EncodableType, int]] = None
     if isinstance(arg, float):
         # float
         assert major_type == 0x7
@@ -68,26 +148,36 @@ def _decode_item(stream: BufferedIOBase) -&gt; EncodableType:
             if arg &gt; 0:
                 raise DAGCBORDecodingError(&#34;Infinity is not an allowed float value.&#34;)
             raise DAGCBORDecodingError(&#34;-Infinity is not an allowed float value.&#34;)
-        return arg
-    if major_type == 0x0:
-        return arg # unsigned int
-    if major_type == 0x1:
-        return -1-arg # negative int
-    if major_type == 0x2:
-        return _decode_bytes(stream, arg)
-    if major_type == 0x3:
-        return _decode_str(stream, arg)
-    if major_type == 0x4:
-        return _decode_list(stream, arg)
-    if major_type == 0x5:
-        return _decode_dict(stream, arg)
-    if major_type == 0x6:
-        return _decode_cid(stream, arg)
-    if major_type == 0x7:
-        return _decode_bool_none(stream, arg)
-    raise RuntimeError(&#34;Major type must be one of 0x0-0x7.&#34;)
+        ret = (arg, num_bytes_read)
+    elif major_type == 0x0:
+        ret = (arg, num_bytes_read) # unsigned int
+    elif major_type == 0x1:
+        ret = (-1-arg, num_bytes_read) # negative int
+    elif major_type == 0x2:
+        value, num_bytes_further_read = _decode_bytes(stream, arg)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    elif major_type == 0x3:
+        value, num_bytes_further_read = _decode_str(stream, arg)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    elif major_type == 0x4:
+        value, num_bytes_further_read = _decode_list(stream, arg, callback=callback)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    elif major_type == 0x5:
+        value, num_bytes_further_read = _decode_dict(stream, arg, callback=callback)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    elif major_type == 0x6:
+        value, num_bytes_further_read = _decode_cid(stream, arg)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    elif major_type == 0x7:
+        value, num_bytes_further_read = _decode_bool_none(stream, arg)
+        ret = (value, num_bytes_read+num_bytes_further_read)
+    else:
+        raise RuntimeError(&#34;Major type must be one of 0x0-0x7.&#34;)
+    if callback is not None:
+        callback(*ret)
+    return ret
 
-def _decode_head(stream: BufferedIOBase) -&gt; Tuple[int, Union[int, float]]:
+def _decode_head(stream: BufferedIOBase) -&gt; Tuple[int, Union[int, float], int]:
     # read leading byte
     res = stream.read(1)
     if len(res) &lt; 1:
@@ -95,10 +185,10 @@ def _decode_head(stream: BufferedIOBase) -&gt; Tuple[int, Union[int, float]]:
     leading_byte = res[0]
     major_type = leading_byte &gt;&gt; 5
     additional_info = leading_byte &amp; 0b11111
-    # read argument value and return (major_type, arg)
+    # read argument value and return (major_type, arg, num_bytes_read)
     if additional_info &lt; 24:
         # argument value = additional info
-        return (major_type, additional_info)
+        return (major_type, additional_info, 1)
     if additional_info &gt; 27 or (major_type == 0x7 and additional_info != 27):
         raise DAGCBORDecodingError(f&#34;Invalid additional info {additional_info} in data item head for major type {major_type}.&#34;)
     argument_nbytes = 1&lt;&lt;(additional_info-24)
@@ -107,86 +197,89 @@ def _decode_head(stream: BufferedIOBase) -&gt; Tuple[int, Union[int, float]]:
         raise CBORDecodingError(f&#34;Unexpected EOF while reading {argument_nbytes} byte argument of data item head.&#34;)
     if additional_info == 24:
         # 1 byte of unsigned int argument value to follow
-        return (major_type, res[0])
+        return (major_type, res[0], 2)
     if additional_info == 25:
         # 2 bytes of unsigned int argument value to follow
         arg = struct.unpack(&#34;&gt;H&#34;, res)[0]
         if arg &lt;= 255:
             raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 2 bytes, while 1 byte would have been enough.&#34;)
-        return (major_type, arg)
+        return (major_type, arg, 3)
     if additional_info == 26:
         # 4 bytes of unsigned int argument value to follow
         arg = struct.unpack(&#34;&gt;L&#34;, res)[0]
         if arg &lt;= 65535:
             raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 4 bytes, while 2 bytes would have been enough.&#34;)
-        return (major_type, arg)
+        return (major_type, arg, 5)
     # necessarily additional_info == 27
     if major_type == 0x7:
         # 8 bytes of float argument value to follow
-        return (major_type, struct.unpack(&#34;&gt;d&#34;, res)[0])
+        return (major_type, struct.unpack(&#34;&gt;d&#34;, res)[0], 9)
     # 8 bytes of unsigned int argument value to follow
     arg = struct.unpack(&#34;&gt;Q&#34;, res)[0]
     if arg &lt;= 4294967295:
         raise DAGCBORDecodingError(f&#34;Integer {arg} was encoded using 8 bytes, while 4 bytes would have been enough.&#34;)
-    return (major_type, arg)
+    return (major_type, arg, 9)
 
-def _decode_bytes(stream: BufferedIOBase, length: int) -&gt; bytes:
+def _decode_bytes(stream: BufferedIOBase, length: int) -&gt; Tuple[bytes, int]:
     res = stream.read(length)
     if len(res) &lt; length:
         raise CBORDecodingError(f&#34;Unexpected EOF while reading {length} bytes of bytestring.&#34;)
-    return res
+    return (res, length)
 
-def _decode_str(stream: BufferedIOBase, length: int) -&gt; str:
+def _decode_str(stream: BufferedIOBase, length: int) -&gt; Tuple[str, int]:
     res = stream.read(length)
     if len(res) &lt; length:
         raise CBORDecodingError(f&#34;Unexpected EOF while reading {length} bytes of string.&#34;)
-    return res.decode(encoding=&#34;utf-8&#34;, errors=&#34;strict&#34;)
+    return (res.decode(encoding=&#34;utf-8&#34;, errors=&#34;strict&#34;), length)
 
-def _decode_list(stream: BufferedIOBase, length: int) -&gt; list:
+def _decode_list(stream: BufferedIOBase, length: int, *,
+                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[list, int]:
     l: list = []
     for i in range(length):
         try:
-            l.append(_decode_item(stream))
+            item, _ = _decode_item(stream, callback=callback)
+            l.append(item)
         except CBORDecodingError as e:
             raise CBORDecodingError(f&#34;Error while decoding item #{i} in list of length {length}.&#34;) from e
-    return l
+    return (l, 0)
 
-def _decode_dict(stream: BufferedIOBase, length: int) -&gt; dict:
+def _decode_dict(stream: BufferedIOBase, length: int,
+                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[dict, int]:
     d: dict = {}
     for i in range(length):
         try:
-            k = _decode_item(stream)
+            k, _ = _decode_item(stream, callback=callback)
         except CBORDecodingError as e:
             raise CBORDecodingError(f&#34;Error while decoding key #{i} in dict of length {length}.&#34;) from e
         if not isinstance(k, str):
             raise DAGCBORDecodingError(f&#34;Key #{i} in dict of length {length} is of type {type(k)}, expected string.&#34;)
         try:
-            v = _decode_item(stream)
+            v, _ = _decode_item(stream, callback=callback)
         except CBORDecodingError as e:
             raise CBORDecodingError(f&#34;Error while decoding value #{i} in dict of length {length}.&#34;) from e
         d[k] = v
     if len(d) != length:
         raise DAGCBORDecodingError(f&#34;Found only {len(d)} unique keys out of {length} key-value pairs.&#34;)
-    return d
+    return (d, 0)
 
-def _decode_cid(stream: BufferedIOBase, arg: int) -&gt; cid.cid.BaseCID:
+def _decode_cid(stream: BufferedIOBase, arg: int) -&gt; Tuple[cid.cid.BaseCID, int]:
     if arg != 42:
         raise DAGCBORDecodingError(f&#34;Error while decoding major type 0x6: tag {arg} is not allowed.&#34;)
     try:
-        cid_bytes = _decode_item(stream)
+        cid_bytes, num_bytes_read = _decode_item(stream, callback=None)
     except CBORDecodingError as e:
         raise CBORDecodingError(&#34;Error while decoding CID bytes.&#34;) from e
     if not isinstance(cid_bytes, bytes):
         raise DAGCBORDecodingError(f&#34;Expected CID bytes, found data of type {type(cid_bytes)} instead.&#34;)
-    return cid.from_bytes(cid_bytes)
+    return (cid.from_bytes(cid_bytes), num_bytes_read)
 
-def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Optional[bool]:
+def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Tuple[Optional[bool], int]:
     if arg == 20:
-        return False
+        return (False, 0)
     if arg == 21:
-        return True
+        return (True, 0)
     if arg == 22:
-        return None
+        return (None, 0)
     raise DAGCBORDecodingError(f&#34;Error while decoding major type 0x7: simple value {arg} is not allowed.&#34;)</code></pre>
 </details>
 </section>
@@ -198,23 +291,95 @@ def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Optional[bool]:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.decoding.decode"><code class="name flex">
-<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes]) ‑> Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]</span>
+<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[Callable[[Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float], int], None]] = None) ‑> Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p></div>
+<div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p>
+<p>The optional keyword argument <code>allow_cocatenation</code> (default <code>False</code>) can be set to <code>True</code> to allow only
+part of the stream to be decoded: if set to <code>False</code>, the whole stream will be read and any bytes not used
+in the decoding will cause a <code>DAGCBORDecodingError</code> to be raised.</p>
+<p>The optional keyword argument <code>callback</code> (default <code>None</code>) can be set to a function
+<code>fun: Callable[[EncodableType, int], None]</code> which is invoked as <code>f(item, num_bytes_read)</code> every time an item
+is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:</p>
+<pre><code class="language-py">    &gt;&gt;&gt; import dag_cbor
+    &gt;&gt;&gt; from io import BytesIO
+    &gt;&gt;&gt; class BytesReadCounter:
+    ...     _num_bytes_read = 0
+    ...     def __call__(self, _, num_bytes_read):
+    ...         self._num_bytes_read += num_bytes_read
+    ...     def __int__(self):
+    ...         return self._num_bytes_read
+    ...
+    &gt;&gt;&gt; encoded_bytes = b'¢aaabfhello! '
+    &gt;&gt;&gt; len(encoded_bytes)
+    16
+    &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
+    &gt;&gt;&gt; bytes_read_cnt = BytesReadCounter()
+    &gt;&gt;&gt; dag_cbor.decode(stream, allow_concat=True, callback=bytes_read_cnt)
+    {'a': 12, 'b': 'hello!'}
+    &gt;&gt;&gt; int(bytes_read_cnt)
+    13
+    &gt;&gt;&gt; bytes_remaining = stream.read()
+    &gt;&gt;&gt; bytes_remaining
+    b' '
+    &gt;&gt;&gt; len(bytes_remaining)
+    3
+    &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
+    [0, 1]
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def decode(stream_or_bytes: Union[BufferedIOBase, bytes]) -&gt; EncodableType:
+<pre><code class="python">def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
+           allow_concat: bool = False,
+           callback: Optional[Callable[[EncodableType, int], None]] = None) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
+
+        The optional keyword argument `allow_cocatenation` (default `False`) can be set to `True` to allow only
+        part of the stream to be decoded: if set to `False`, the whole stream will be read and any bytes not used
+        in the decoding will cause a `DAGCBORDecodingError` to be raised.
+
+        The optional keyword argument `callback` (default `None`) can be set to a function
+        `fun: Callable[[EncodableType, int], None]` which is invoked as `f(item, num_bytes_read)` every time an item
+        is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:
+
+        ```py
+            &gt;&gt;&gt; import dag_cbor
+            &gt;&gt;&gt; from io import BytesIO
+            &gt;&gt;&gt; class BytesReadCounter:
+            ...     _num_bytes_read = 0
+            ...     def __call__(self, _, num_bytes_read):
+            ...         self._num_bytes_read += num_bytes_read
+            ...     def __int__(self):
+            ...         return self._num_bytes_read
+            ...
+            &gt;&gt;&gt; encoded_bytes = b&#39;\xa2aa\x0cabfhello!\x82\x00\x01&#39;
+            &gt;&gt;&gt; len(encoded_bytes)
+            16
+            &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
+            &gt;&gt;&gt; bytes_read_cnt = BytesReadCounter()
+            &gt;&gt;&gt; dag_cbor.decode(stream, allow_concat=True, callback=bytes_read_cnt)
+            {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
+            &gt;&gt;&gt; int(bytes_read_cnt)
+            13
+            &gt;&gt;&gt; bytes_remaining = stream.read()
+            &gt;&gt;&gt; bytes_remaining
+            b&#39;\x82\x00\x01&#39;
+            &gt;&gt;&gt; len(bytes_remaining)
+            3
+            &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
+            [0, 1]
+        ```
     &#34;&#34;&#34;
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
         stream = stream_or_bytes
-    data = _decode_item(stream)
+    data, _ = _decode_item(stream, callback=callback)
+    if allow_concat:
+        return data
     remaining_bytes = stream.read()
     if len(remaining_bytes) &gt; 0:
         raise DAGCBORDecodingError(&#34;Encode and decode must operate on a single top-level CBOR object&#34;)

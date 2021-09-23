@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>dag_cbor API documentation</title>
-<meta name="description" content="Python implementation of the [DAG-CBOR codec specification](https://ipld.io/specs/codecs/dag-cbor/spec/) …" />
+<meta name="description" content="Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/) specification …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,9 +23,18 @@
 <h1 class="title">Package <code>dag_cbor</code></h1>
 </header>
 <section id="section-intro">
-<p>Python implementation of the <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR codec specification</a>.</p>
-<p>This is a CBOR codec (e.g. see <a href="https://github.com/agronholm/cbor2">cbor2</a>) which enforces additional
-restrictions and conventions, both in encoding and in decoding:</p>
+<p>Python implementation of the <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR codec</a> specification.</p>
+<p>The core functionality of the library is performed by the <code>encode</code> and <code>decode</code> functions:</p>
+<pre><code class="language-python">&gt;&gt;&gt; import dag_cbor
+&gt;&gt;&gt; dag_cbor.encode({'a': 12, 'b': 'hello!'})
+b'¢aaabfhello!'
+&gt;&gt;&gt; dag_cbor.decode(b'¢aaabfhello!')
+{'a': 12, 'b': 'hello!'}
+</code></pre>
+<p>For their documentation, see the <code><a title="dag_cbor.encoding" href="encoding.html">dag_cbor.encoding</a></code> and <code><a title="dag_cbor.decoding" href="decoding.html">dag_cbor.decoding</a></code> modules.
+The <code><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></code> module contains functions to generate random data compatible with DAG-CBOR encoding.
+The <code><a title="dag_cbor.utils" href="utils.html">dag_cbor.utils</a></code> module contains errors and utility functions.</p>
+<p>The DAG-CBOR codec is a restriction of <a href="https://cbor.io/">CBOR codec</a>, enforcing additional conventions:</p>
 <ul>
 <li>The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head <code>0xD82A</code>
 (<code>0xD8 == 0b110_11000</code> means "major type 6 (<code>0b110 == 6</code>) with 1 byte of argument (<code>0b11000 = 24</code>)",
@@ -43,15 +52,31 @@ the standard ordering of <code>bytes</code> objects in Python).</li>
 <li>Encoding and decoding is only allowed on a single top-level item: back-to-back concatenated items at the top level
 are not allowed.</li>
 </ul>
+<p>Because the CBOR codec can encode/decode all data handled by the DAG-CBOR codec, we use an established CBOR implementation
+as the reference when testing, namely the <a href="https://github.com/agronholm/cbor2"><code>cbor2</code></a> package (with the exception of CID
+data, which is not natively handled by <code>cbor2</code>).</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-    Python implementation of the [DAG-CBOR codec specification](https://ipld.io/specs/codecs/dag-cbor/spec/).
+    Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/) specification.
 
-    This is a CBOR codec (e.g. see [cbor2](https://github.com/agronholm/cbor2)) which enforces additional
-    restrictions and conventions, both in encoding and in decoding:
+    The core functionality of the library is performed by the `encode` and `decode` functions:
+
+    ```python
+    &gt;&gt;&gt; import dag_cbor
+    &gt;&gt;&gt; dag_cbor.encode({&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;})
+    b&#39;\xa2aa\x0cabfhello!&#39;
+    &gt;&gt;&gt; dag_cbor.decode(b&#39;\xa2aa\x0cabfhello!&#39;)
+    {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
+    ```
+
+    For their documentation, see the `dag_cbor.encoding` and `dag_cbor.decoding` modules.
+    The `dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
+    The `dag_cbor.utils` module contains errors and utility functions.
+
+    The DAG-CBOR codec is a restriction of [CBOR codec](https://cbor.io/), enforcing additional conventions:
 
     - The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head `0xD82A`
       (`0xD8 == 0b110_11000` means &#34;major type 6 (`0b110 == 6`) with 1 byte of argument (`0b11000 = 24`)&#34;,
@@ -68,6 +93,10 @@ are not allowed.</li>
     - The special float values `NaN`, `Infinity` and `-Infinity` are not allowed.
     - Encoding and decoding is only allowed on a single top-level item: back-to-back concatenated items at the top level
       are not allowed.
+
+    Because the CBOR codec can encode/decode all data handled by the DAG-CBOR codec, we use an established CBOR implementation
+    as the reference when testing, namely the [`cbor2`](https://github.com/agronholm/cbor2) package (with the exception of CID
+    data, which is not natively handled by `cbor2`).
 &#34;&#34;&#34;
 
 from .encoding import encode
@@ -80,19 +109,19 @@ from . import random</code></pre>
 <dl>
 <dt><code class="name"><a title="dag_cbor.decoding" href="decoding.html">dag_cbor.decoding</a></code></dt>
 <dd>
-<div class="desc"><p>Deconding functions for DAG-CBOR codec.</p></div>
+<div class="desc"><p>Deconding function for DAG-CBOR codec …</p></div>
 </dd>
 <dt><code class="name"><a title="dag_cbor.encoding" href="encoding.html">dag_cbor.encoding</a></code></dt>
 <dd>
-<div class="desc"><p>Encoding functions for DAG-CBOR codec.</p></div>
+<div class="desc"><p>Encoding functions for DAG-CBOR codec …</p></div>
 </dd>
 <dt><code class="name"><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></code></dt>
 <dd>
-<div class="desc"><p>Generation of random data valid for DAG-CBOR encoding.</p></div>
+<div class="desc"><p>The <code><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></code> module contains functions to generate random data compatible with DAG-CBOR encoding …</p></div>
 </dd>
 <dt><code class="name"><a title="dag_cbor.utils" href="utils.html">dag_cbor.utils</a></code></dt>
 <dd>
-<div class="desc"><p>Utility classes and functions.</p></div>
+<div class="desc"><p>Utility classes and functions for the <code><a title="dag_cbor" href="#dag_cbor">dag_cbor</a></code> package …</p></div>
 </dd>
 </dl>
 </section>
