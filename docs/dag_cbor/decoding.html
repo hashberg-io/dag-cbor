@@ -26,13 +26,13 @@
 <p>Deconding function for DAG-CBOR codec.</p>
 <p>The core functionality is performed by the <code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode()</a></code> function, which decodes <code>bytes</code> into a value:</p>
 <pre><code class="language-python">    &gt;&gt;&gt; import dag_cbor
-    &gt;&gt;&gt; dag_cbor.decode(b'¢aaabfhello!')
+    &gt;&gt;&gt; dag_cbor.decode(b'\xa2aa\x0cabfhello!')
     {'a': 12, 'b': 'hello!'}
 </code></pre>
 <p>A buffered binary stream (i.e. an instance of <code>io.BufferedIOBase</code>) can be passed to the <code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode()</a></code> function
 instead of a <code>bytes</code> object, in which case the contents of the stream are read in their entirety and decoded:</p>
-<pre><code class="language-python">    &gt;&gt;&gt; mystream = BytesIO(b'¢aaabfhello!')
-    &gt;&gt;&gt; dag_cbor.decode(mystream)
+<pre><code class="language-python">    &gt;&gt;&gt; stream = BytesIO(b'\xa2aa\x0cabfhello!')
+    &gt;&gt;&gt; dag_cbor.decode(stream)
     {'a': 12, 'b': 'hello!'}
 </code></pre>
 <p>The decision to read the entirety of the stream stems from the <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR codec</a>
@@ -50,7 +50,7 @@ and allow only part of the stream to be decoded.</p>
 
     ```python
         &gt;&gt;&gt; import dag_cbor
-        &gt;&gt;&gt; dag_cbor.decode(b&#39;\xa2aa\x0cabfhello!&#39;)
+        &gt;&gt;&gt; dag_cbor.decode(b&#39;\\xa2aa\\x0cabfhello!&#39;)
         {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
     ```
 
@@ -58,8 +58,8 @@ and allow only part of the stream to be decoded.</p>
     instead of a `bytes` object, in which case the contents of the stream are read in their entirety and decoded:
 
     ```python
-        &gt;&gt;&gt; mystream = BytesIO(b&#39;\xa2aa\x0cabfhello!&#39;)
-        &gt;&gt;&gt; dag_cbor.decode(mystream)
+        &gt;&gt;&gt; stream = BytesIO(b&#39;\\xa2aa\\x0cabfhello!&#39;)
+        &gt;&gt;&gt; dag_cbor.decode(stream)
         {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
     ```
 
@@ -79,19 +79,35 @@ import cid # type: ignore
 from .encoding import EncodableType
 from .utils import CBORDecodingError, DAGCBORDecodingError
 
+DecodeCallback = Callable[[EncodableType, int], None]
+&#34;&#34;&#34;
+    Type of optional callbacks for the `decode` function:
+
+    ```py
+        DecodeCallback = Callable[[EncodableType, int], None]
+    ```
+&#34;&#34;&#34;
 
 def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
-           callback: Optional[Callable[[EncodableType, int], None]] = None) -&gt; EncodableType:
+           callback: Optional[&#34;DecodeCallback&#34;] = None) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
 
+        Currently, [pdoc](https://pdoc3.github.io/pdoc/) does not properly document the signature of this function, which is as follows:
+
+        ```py
+            def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
+                       allow_concat: bool = False,
+                       callback: Optional[DecodeCallback] = None) -&gt; EncodableType:
+        ```
+
         The optional keyword argument `allow_cocatenation` (default `False`) can be set to `True` to allow only
         part of the stream to be decoded: if set to `False`, the whole stream will be read and any bytes not used
-        in the decoding will cause a `DAGCBORDecodingError` to be raised.
+        in the decoding will cause a `dag_cbor.utils.DAGCBORDecodingError` to be raised.
 
         The optional keyword argument `callback` (default `None`) can be set to a function
-        `fun: Callable[[EncodableType, int], None]` which is invoked as `f(item, num_bytes_read)` every time an item
+        `fun: DecodeCallback` which is invoked as `fun(item, num_bytes_read)` every time an item
         is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:
 
         ```py
@@ -104,7 +120,7 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             ...     def __int__(self):
             ...         return self._num_bytes_read
             ...
-            &gt;&gt;&gt; encoded_bytes = b&#39;\xa2aa\x0cabfhello!\x82\x00\x01&#39;
+            &gt;&gt;&gt; encoded_bytes = b&#39;\\xa2aa\\x0cabfhello!\\x82\\x00\\x01&#39;
             &gt;&gt;&gt; len(encoded_bytes)
             16
             &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
@@ -115,7 +131,7 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             13
             &gt;&gt;&gt; bytes_remaining = stream.read()
             &gt;&gt;&gt; bytes_remaining
-            b&#39;\x82\x00\x01&#39;
+            b&#39;\\x82\\x00\\x01&#39;
             &gt;&gt;&gt; len(bytes_remaining)
             3
             &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
@@ -135,7 +151,7 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
     return data
 
 def _decode_item(stream: BufferedIOBase, *,
-                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[EncodableType, int]:
+                 callback: Optional[DecodeCallback]) -&gt; Tuple[EncodableType, int]:
     # pylint: disable = too-many-return-statements, too-many-branches
     major_type, arg, num_bytes_read = _decode_head(stream)
     ret: Optional[Tuple[EncodableType, int]] = None
@@ -233,7 +249,7 @@ def _decode_str(stream: BufferedIOBase, length: int) -&gt; Tuple[str, int]:
     return (res.decode(encoding=&#34;utf-8&#34;, errors=&#34;strict&#34;), length)
 
 def _decode_list(stream: BufferedIOBase, length: int, *,
-                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[list, int]:
+                 callback: Optional[DecodeCallback]) -&gt; Tuple[list, int]:
     l: list = []
     for i in range(length):
         try:
@@ -244,7 +260,7 @@ def _decode_list(stream: BufferedIOBase, length: int, *,
     return (l, 0)
 
 def _decode_dict(stream: BufferedIOBase, length: int,
-                 callback: Optional[Callable[[EncodableType, int], None]]) -&gt; Tuple[dict, int]:
+                 callback: Optional[DecodeCallback]) -&gt; Tuple[dict, int]:
     d: dict = {}
     for i in range(length):
         try:
@@ -286,20 +302,34 @@ def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Tuple[Optional[boo
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="dag_cbor.decoding.DecodeCallback"><code class="name">var <span class="ident">DecodeCallback</span></code></dt>
+<dd>
+<div class="desc"><p>Type of optional callbacks for the <code><a title="dag_cbor.decoding.decode" href="#dag_cbor.decoding.decode">decode()</a></code> function:</p>
+<pre><code class="language-py">    DecodeCallback = Callable[[EncodableType, int], None]
+</code></pre></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.decoding.decode"><code class="name flex">
-<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[Callable[[Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float], int], None]] = None) ‑> Union[ForwardRef(None), bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]</span>
+<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[ForwardRef('<a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a>')] = None) ‑> Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, cid.cid.BaseCID]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p>
+<p>Currently, <a href="https://pdoc3.github.io/pdoc/">pdoc</a> does not properly document the signature of this function, which is as follows:</p>
+<pre><code class="language-py">    def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
+               allow_concat: bool = False,
+               callback: Optional[DecodeCallback] = None) -&gt; EncodableType:
+</code></pre>
 <p>The optional keyword argument <code>allow_cocatenation</code> (default <code>False</code>) can be set to <code>True</code> to allow only
 part of the stream to be decoded: if set to <code>False</code>, the whole stream will be read and any bytes not used
-in the decoding will cause a <code>DAGCBORDecodingError</code> to be raised.</p>
+in the decoding will cause a <code><a title="dag_cbor.utils.DAGCBORDecodingError" href="utils.html#dag_cbor.utils.DAGCBORDecodingError">DAGCBORDecodingError</a></code> to be raised.</p>
 <p>The optional keyword argument <code>callback</code> (default <code>None</code>) can be set to a function
-<code>fun: Callable[[EncodableType, int], None]</code> which is invoked as <code>f(item, num_bytes_read)</code> every time an item
+<code>fun: DecodeCallback</code> which is invoked as <code>fun(item, num_bytes_read)</code> every time an item
 is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:</p>
 <pre><code class="language-py">    &gt;&gt;&gt; import dag_cbor
     &gt;&gt;&gt; from io import BytesIO
@@ -310,7 +340,7 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
     ...     def __int__(self):
     ...         return self._num_bytes_read
     ...
-    &gt;&gt;&gt; encoded_bytes = b'¢aaabfhello! '
+    &gt;&gt;&gt; encoded_bytes = b'\xa2aa\x0cabfhello!\x82\x00\x01'
     &gt;&gt;&gt; len(encoded_bytes)
     16
     &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
@@ -321,7 +351,7 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
     13
     &gt;&gt;&gt; bytes_remaining = stream.read()
     &gt;&gt;&gt; bytes_remaining
-    b' '
+    b'\x82\x00\x01'
     &gt;&gt;&gt; len(bytes_remaining)
     3
     &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
@@ -333,16 +363,24 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
 </summary>
 <pre><code class="python">def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
-           callback: Optional[Callable[[EncodableType, int], None]] = None) -&gt; EncodableType:
+           callback: Optional[&#34;DecodeCallback&#34;] = None) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
 
+        Currently, [pdoc](https://pdoc3.github.io/pdoc/) does not properly document the signature of this function, which is as follows:
+
+        ```py
+            def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
+                       allow_concat: bool = False,
+                       callback: Optional[DecodeCallback] = None) -&gt; EncodableType:
+        ```
+
         The optional keyword argument `allow_cocatenation` (default `False`) can be set to `True` to allow only
         part of the stream to be decoded: if set to `False`, the whole stream will be read and any bytes not used
-        in the decoding will cause a `DAGCBORDecodingError` to be raised.
+        in the decoding will cause a `dag_cbor.utils.DAGCBORDecodingError` to be raised.
 
         The optional keyword argument `callback` (default `None`) can be set to a function
-        `fun: Callable[[EncodableType, int], None]` which is invoked as `f(item, num_bytes_read)` every time an item
+        `fun: DecodeCallback` which is invoked as `fun(item, num_bytes_read)` every time an item
         is decoded from the stream/bytes. A simple use for this callback is to count the number of bytes read from the stream:
 
         ```py
@@ -355,7 +393,7 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
             ...     def __int__(self):
             ...         return self._num_bytes_read
             ...
-            &gt;&gt;&gt; encoded_bytes = b&#39;\xa2aa\x0cabfhello!\x82\x00\x01&#39;
+            &gt;&gt;&gt; encoded_bytes = b&#39;\\xa2aa\\x0cabfhello!\\x82\\x00\\x01&#39;
             &gt;&gt;&gt; len(encoded_bytes)
             16
             &gt;&gt;&gt; stream = BytesIO(encoded_bytes)
@@ -366,7 +404,7 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
             13
             &gt;&gt;&gt; bytes_remaining = stream.read()
             &gt;&gt;&gt; bytes_remaining
-            b&#39;\x82\x00\x01&#39;
+            b&#39;\\x82\\x00\\x01&#39;
             &gt;&gt;&gt; len(bytes_remaining)
             3
             &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
@@ -400,6 +438,11 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="dag_cbor" href="index.html">dag_cbor</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

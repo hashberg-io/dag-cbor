@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>dag_cbor.utils API documentation</title>
-<meta name="description" content="Utility classes and functions for the `dag_cbor` package …" />
+<meta name="description" content="Error classes and utility functions …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,7 +23,7 @@
 <h1 class="title">Module <code>dag_cbor.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Utility classes and functions for the <code><a title="dag_cbor" href="index.html">dag_cbor</a></code> package.</p>
+<p>Error classes and utility functions.</p>
 <p>Errors raised because of CBOR codec specifications are instances of <code><a title="dag_cbor.utils.CBORError" href="#dag_cbor.utils.CBORError">CBORError</a></code>, while errors
 raised because of additional restrictions imposed by the DAG-CBOR codec are instances of <code><a title="dag_cbor.utils.DAGCBORError" href="#dag_cbor.utils.DAGCBORError">DAGCBORError</a></code>,
 a subclass of <code><a title="dag_cbor.utils.CBORError" href="#dag_cbor.utils.CBORError">CBORError</a></code>. Both kind of errors are then further specialised into encoding and decoding errors,
@@ -39,7 +39,7 @@ of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)</li
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-    Utility classes and functions for the `dag_cbor` package.
+    Error classes and utility functions.
 
     Errors raised because of CBOR codec specifications are instances of `CBORError`, while errors
     raised because of additional restrictions imposed by the DAG-CBOR codec are instances of `DAGCBORError`,

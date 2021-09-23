@@ -1,13 +1,13 @@
 """
     Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/) specification.
 
-    The core functionality of the library is performed by the `encode` and `decode` functions:
+    The core functionality of the library is performed by the `dag_cbor.encoding.encode` and `dag_cbor.decoding.decode` functions:
 
     ```python
     >>> import dag_cbor
     >>> dag_cbor.encode({'a': 12, 'b': 'hello!'})
-    b'\xa2aa\x0cabfhello!'
-    >>> dag_cbor.decode(b'\xa2aa\x0cabfhello!')
+    b'\\xa2aa\\x0cabfhello!'
+    >>> dag_cbor.decode(b'\\xa2aa\\x0cabfhello!')
     {'a': 12, 'b': 'hello!'}
     ```
 
@@ -17,9 +17,9 @@
 
     The DAG-CBOR codec is a restriction of [CBOR codec](https://cbor.io/), enforcing additional conventions:
 
-    - The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head `0xD82A`
-      (`0xD8 == 0b110_11000` means "major type 6 (`0b110 == 6`) with 1 byte of argument (`0b11000 = 24`)",
-      while `0x2A` is the number 42).
+    - The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head `0xd82a`
+      (`0xd8 == 0b110_11000` means "major type 6 (`0b110 == 6`) with 1 byte of argument (`0b11000 = 24`)",
+      while `0x2a` is the number 42).
     - Integers (major types 0 and 1) must be encoded using the minimum possible number of bytes.
     - Lengths for major types 2, 3, 4 and 5 must be encoded in the data item head using the minimum possible number of bytes.
     - Map keys must be strings (major type 3) and must be unique.

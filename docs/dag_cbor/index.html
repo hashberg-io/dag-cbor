@@ -24,11 +24,11 @@
 </header>
 <section id="section-intro">
 <p>Python implementation of the <a href="https://ipld.io/specs/codecs/dag-cbor/spec/">DAG-CBOR codec</a> specification.</p>
-<p>The core functionality of the library is performed by the <code>encode</code> and <code>decode</code> functions:</p>
+<p>The core functionality of the library is performed by the <code><a title="dag_cbor.encoding.encode" href="encoding.html#dag_cbor.encoding.encode">encode()</a></code> and <code><a title="dag_cbor.decoding.decode" href="decoding.html#dag_cbor.decoding.decode">decode()</a></code> functions:</p>
 <pre><code class="language-python">&gt;&gt;&gt; import dag_cbor
 &gt;&gt;&gt; dag_cbor.encode({'a': 12, 'b': 'hello!'})
-b'¢aaabfhello!'
-&gt;&gt;&gt; dag_cbor.decode(b'¢aaabfhello!')
+b'\xa2aa\x0cabfhello!'
+&gt;&gt;&gt; dag_cbor.decode(b'\xa2aa\x0cabfhello!')
 {'a': 12, 'b': 'hello!'}
 </code></pre>
 <p>For their documentation, see the <code><a title="dag_cbor.encoding" href="encoding.html">dag_cbor.encoding</a></code> and <code><a title="dag_cbor.decoding" href="decoding.html">dag_cbor.decoding</a></code> modules.
@@ -36,9 +36,9 @@ The <code><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></cod
 The <code><a title="dag_cbor.utils" href="utils.html">dag_cbor.utils</a></code> module contains errors and utility functions.</p>
 <p>The DAG-CBOR codec is a restriction of <a href="https://cbor.io/">CBOR codec</a>, enforcing additional conventions:</p>
 <ul>
-<li>The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head <code>0xD82A</code>
-(<code>0xD8 == 0b110_11000</code> means "major type 6 (<code>0b110 == 6</code>) with 1 byte of argument (<code>0b11000 = 24</code>)",
-while <code>0x2A</code> is the number 42).</li>
+<li>The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head <code>0xd82a</code>
+(<code>0xd8 == 0b110_11000</code> means "major type 6 (<code>0b110 == 6</code>) with 1 byte of argument (<code>0b11000 = 24</code>)",
+while <code>0x2a</code> is the number 42).</li>
 <li>Integers (major types 0 and 1) must be encoded using the minimum possible number of bytes.</li>
 <li>Lengths for major types 2, 3, 4 and 5 must be encoded in the data item head using the minimum possible number of bytes.</li>
 <li>Map keys must be strings (major type 3) and must be unique.</li>
@@ -62,13 +62,13 @@ data, which is not natively handled by <code>cbor2</code>).</p>
 <pre><code class="python">&#34;&#34;&#34;
     Python implementation of the [DAG-CBOR codec](https://ipld.io/specs/codecs/dag-cbor/spec/) specification.
 
-    The core functionality of the library is performed by the `encode` and `decode` functions:
+    The core functionality of the library is performed by the `dag_cbor.encoding.encode` and `dag_cbor.decoding.decode` functions:
 
     ```python
     &gt;&gt;&gt; import dag_cbor
     &gt;&gt;&gt; dag_cbor.encode({&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;})
-    b&#39;\xa2aa\x0cabfhello!&#39;
-    &gt;&gt;&gt; dag_cbor.decode(b&#39;\xa2aa\x0cabfhello!&#39;)
+    b&#39;\\xa2aa\\x0cabfhello!&#39;
+    &gt;&gt;&gt; dag_cbor.decode(b&#39;\\xa2aa\\x0cabfhello!&#39;)
     {&#39;a&#39;: 12, &#39;b&#39;: &#39;hello!&#39;}
     ```
 
@@ -78,9 +78,9 @@ data, which is not natively handled by <code>cbor2</code>).</p>
 
     The DAG-CBOR codec is a restriction of [CBOR codec](https://cbor.io/), enforcing additional conventions:
 
-    - The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head `0xD82A`
-      (`0xD8 == 0b110_11000` means &#34;major type 6 (`0b110 == 6`) with 1 byte of argument (`0b11000 = 24`)&#34;,
-      while `0x2A` is the number 42).
+    - The only tag (major type 6) allowed is the CID tag 42, to be encoded as a two bytes head `0xd82a`
+      (`0xd8 == 0b110_11000` means &#34;major type 6 (`0b110 == 6`) with 1 byte of argument (`0b11000 = 24`)&#34;,
+      while `0x2a` is the number 42).
     - Integers (major types 0 and 1) must be encoded using the minimum possible number of bytes.
     - Lengths for major types 2, 3, 4 and 5 must be encoded in the data item head using the minimum possible number of bytes.
     - Map keys must be strings (major type 3) and must be unique.
@@ -117,11 +117,11 @@ from . import random</code></pre>
 </dd>
 <dt><code class="name"><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></code></dt>
 <dd>
-<div class="desc"><p>The <code><a title="dag_cbor.random" href="random.html">dag_cbor.random</a></code> module contains functions to generate random data compatible with DAG-CBOR encoding …</p></div>
+<div class="desc"><p>Functions to generate random data …</p></div>
 </dd>
 <dt><code class="name"><a title="dag_cbor.utils" href="utils.html">dag_cbor.utils</a></code></dt>
 <dd>
-<div class="desc"><p>Utility classes and functions for the <code><a title="dag_cbor" href="#dag_cbor">dag_cbor</a></code> package …</p></div>
+<div class="desc"><p>Error classes and utility functions …</p></div>
 </dd>
 </dl>
 </section>

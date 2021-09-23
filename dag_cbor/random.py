@@ -1,5 +1,5 @@
 """
-    The `dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
+    Functions to generate random data.
 
     The functions are named `rand_X`, where `X` is one of:
 
@@ -23,7 +23,7 @@
         ...     for d in dag_cbor.random.rand_dict(3):
         ...             pprint.pp(d)
         ...
-        {'BIQPMZ': b'\x85\x1f\x07/\xcc\x00\xfc\xaa',
+        {'BIQPMZ': b'\\x85\\x1f\\x07/\\xcc\\x00\\xfc\\xaa',
          'EJEYDTZI': {},
          'PLSG': {'G': 'JFG',
                   'HZE': -61.278,
@@ -42,10 +42,10 @@
 
     The function call `rand_X()`, without the positional argument `n`, instead yields an infinite stream of random values.
 
-    The `options(**kwargs)` context manager is used to set options temporarily, within the scope of a `with` directive:
+    The `options()` context manager is used to set options temporarily, within the scope of a `with` directive:
     in the example above, we set string characters to be uppercase alphabetic (codepoints `0x41`-`0x5a`) and we excluded CID
     values from being generated (for additional clarity in the example).
-    Options can be set with `set_options(**kwargs)` and reset with `reset_options()`. A read-only view on options can be obtained
+    Options can be set with `set_options()` and reset with `reset_options()`. A read-only view on options can be obtained
     from `get_options()`, and a read-only view on default options can be obtained from `default_options()`:
 
     ```py
@@ -319,6 +319,14 @@ def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> 
     """
         Generates a stream of random data data.
         If a number `n` is given, that number of samples is yelded.
+
+        Currently, [pdoc](https://pdoc3.github.io/pdoc/) does not properly document the signature of this function, which is as follows:
+
+        ```py
+            def rand_data(n: Optional[int] = None, *,
+                          max_nesting: Optional[int] = None) -> Iterator[EncodableType]:
+        ```
+
 
         The optional `max_nesting` keyword argument can be used to explicitly set the
         maximum nesting level for containers:

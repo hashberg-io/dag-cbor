@@ -1,5 +1,5 @@
 """
-    Utility classes and functions for the `dag_cbor` package.
+    Error classes and utility functions.
 
     Errors raised because of CBOR codec specifications are instances of `CBORError`, while errors
     raised because of additional restrictions imposed by the DAG-CBOR codec are instances of `DAGCBORError`,

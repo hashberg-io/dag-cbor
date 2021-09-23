@@ -6,7 +6,7 @@
     ```python
         >>> import dag_cbor
         >>> dag_cbor.encode({'a': 12, 'b': 'hello!'})
-        b'\xa2aa\x0cabfhello!'
+        b'\\xa2aa\\x0cabfhello!'
     ```
 
     A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed to the `encode` function
@@ -15,11 +15,11 @@
 
     ```python
         >>> from io import BytesIO
-        >>> mystream = BytesIO()
-        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'}, stream=mystream)
+        >>> stream = BytesIO()
+        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'}, stream=stream)
         13
-        >>> mystream.getvalue()
-        b'\xa2aa\x0cabfhello!'
+        >>> stream.getvalue()
+        b'\\xa2aa\\x0cabfhello!'
     ```
 
 """
@@ -33,21 +33,41 @@ import cid # type: ignore
 
 from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
-EncodableType = Union[None, bool, int, bytes, str, list, dict, cid.cid.BaseCID, float]
+EncodableType = Union[None, bool, int, float, bytes, str, list, dict, cid.cid.BaseCID]
+"""
+    Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:
+
+    ```py
+        EncodableType = Union[None, bool, int, float, bytes,
+                              str, list, dict, cid.cid.BaseCID]
+    ```
+"""
 
 @overload
-def encode(data: EncodableType, stream: None = None) -> bytes:
+def encode(data: "EncodableType", stream: None = None) -> bytes:
     ... # pragma: no cover
 
 @overload
-def encode(data: EncodableType, stream: BufferedIOBase) -> int:
+def encode(data: "EncodableType", stream: BufferedIOBase) -> int:
     ... # pragma: no cover
 
-def encode(data: EncodableType, stream: Optional[BufferedIOBase] = None) -> Union[bytes, int]:
+def encode(data: "EncodableType", stream: Optional[BufferedIOBase] = None) -> Union[bytes, int]:
     """
         Encodes the given `data` with the DAG-CBOR codec.
-        If a `stream` is given, the encoded data is written to the stream and the number of bytes written is returned.
+
+        If a `stream` is given, the encoded data is written to the stream and the number of bytes written is returned:
+
+        ```py
+            def encode(data: EncodableType, stream: BufferedIOBase) -> int:
+                ...
+        ```
+
         Otherwise, the encoded data is written to an internal stream and the bytes are returned at the end (as a `bytes` object).
+
+        ```py
+            def encode(data: EncodableType, stream: None = None) -> bytes:
+                ...
+        ```
     """
     if stream is None:
         internal_stream = BytesIO()
