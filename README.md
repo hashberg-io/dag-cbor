@@ -68,7 +68,7 @@ The `random` module contains functions to generate random data compatible with D
 {'': 11, 'B': True, 'FWD': {}, 'GXZBVAR': 'BTDWMGI', 'TDICHC': 87}
 ```
 
-For further information, please refer to the [API documentation](#api).
+For further information, please refer to the [API documentation](https://hashberg-io.github.io/dag-cbor/dag_cbor/index.html).
 
 
 ## API
