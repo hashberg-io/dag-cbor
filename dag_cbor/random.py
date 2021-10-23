@@ -81,7 +81,7 @@ import math
 from random import Random # pylint: disable = import-self
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Mapping, Optional
 
 import cid # type: ignore
 import multihash # type: ignore
@@ -127,13 +127,13 @@ def reset_options() -> None:
     _options = _default_options
     _rand = Random(0)
 
-def default_options() -> MappingProxyType:
+def default_options() -> Mapping[str, Any]:
     """
         Readonly view of the default random generation options.
     """
     return MappingProxyType(_default_options)
 
-def get_options() -> MappingProxyType:
+def get_options() -> Mapping[str, Any]:
     """
         Readonly view of the current random generation options.
     """
@@ -157,7 +157,7 @@ def options(*,
             min_float: Optional[float] = None,
             max_float: Optional[float] = None,
             float_decimals: Optional[int] = None,
-            include_cid: Optional[bool] = None,):
+            include_cid: Optional[bool] = None,) -> Iterator[None]:
     """
         Returns with-statement context manager for temporary option setting:
 
@@ -343,7 +343,7 @@ def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> 
     elif max_nesting < -1:
         raise ValueError("Value for max_nesting must be >= -1 (with -1 indicating no containers).")
     include_cid = _options["include_cid"]
-    data_generators: List[Iterator] = [
+    data_generators: List[Iterator[Any]] = [
         rand_list(max_nesting=max_nesting) if max_nesting >= 0 else iter([]),
         rand_dict(max_nesting=max_nesting) if max_nesting >= 0 else iter([]),
         rand_int(),
@@ -368,7 +368,7 @@ def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> 
             raise RuntimeError("All random streams are infinite, this should not happen.") from e
         i += 1
 
-def rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[list]:
+def rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[List[Any]]:
     """
         Generates a stream of random `list` data.
         If a number `n` is given, that number of samples is yelded.
@@ -399,7 +399,7 @@ def rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nest
         yield list(rand_data(_length, max_nesting=max_nesting-1))
         i += 1
 
-def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[dict]:
+def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[Dict[str, Any]]:
     """
         Generates a stream of random `dict` data.
         If a number `n` is given, that number of samples is yelded.

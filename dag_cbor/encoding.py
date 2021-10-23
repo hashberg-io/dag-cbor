@@ -27,7 +27,7 @@
 from io import BufferedIOBase, BytesIO
 import math
 import struct
-from typing import Optional, overload, Union
+from typing import Any, Dict, List, Optional, overload, Union
 
 import cid # type: ignore
 
@@ -152,13 +152,13 @@ def _encode_str(stream: BufferedIOBase, value: str) -> int:
     stream.write(utf8_value)
     return num_head_bytes+len(utf8_value)
 
-def _encode_list(stream: BufferedIOBase, value: list) -> int:
+def _encode_list(stream: BufferedIOBase, value: List[Any]) -> int:
     num_bytes_written = _encode_head(stream, 0x4, len(value))
     for item in value:
         num_bytes_written += _encode(stream, item)
     return num_bytes_written
 
-def _encode_dict(stream: BufferedIOBase, value: dict) -> int:
+def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
     _check_key_compliance(value)
     # sort keys canonically
     try:

@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
         pytest
     - name: Lint with mypy
       run: |
-        mypy dag_cbor
+        mypy --strict dag_cbor
     - name: Lint with pylint
       run: |
         pylint --errors-only --rcfile=.pylintrc dag_cbor

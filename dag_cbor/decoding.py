@@ -27,7 +27,7 @@
 from io import BufferedIOBase, BytesIO
 import math
 import struct
-from typing import Callable, Optional, Tuple, Union
+from typing import Any, Dict, Callable, List, Optional, Tuple, Union
 
 import cid # type: ignore
 
@@ -204,8 +204,8 @@ def _decode_str(stream: BufferedIOBase, length: int) -> Tuple[str, int]:
     return (res.decode(encoding="utf-8", errors="strict"), length)
 
 def _decode_list(stream: BufferedIOBase, length: int, *,
-                 callback: Optional[DecodeCallback]) -> Tuple[list, int]:
-    l: list = []
+                 callback: Optional[DecodeCallback]) -> Tuple[List[Any], int]:
+    l: List[Any] = []
     for i in range(length):
         try:
             item, _ = _decode_item(stream, callback=callback)
@@ -215,8 +215,8 @@ def _decode_list(stream: BufferedIOBase, length: int, *,
     return (l, 0)
 
 def _decode_dict(stream: BufferedIOBase, length: int,
-                 callback: Optional[DecodeCallback]) -> Tuple[dict, int]:
-    d: dict = {}
+                 callback: Optional[DecodeCallback]) -> Tuple[Dict[str, Any], int]:
+    d: Dict[str, Any] = {}
     for i in range(length):
         try:
             k, _ = _decode_item(stream, callback=callback)

@@ -38,6 +38,6 @@
     data, which is not natively handled by `cbor2`).
 """
 
-from .encoding import encode
-from .decoding import decode
-from . import random
+from .encoding import encode as encode
+from .decoding import decode as decode
+from . import random as random

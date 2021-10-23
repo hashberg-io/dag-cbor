@@ -17,6 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=["test"]),
     classifiers=[ # see https://pypi.org/classifiers/
         "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
@@ -26,7 +27,7 @@ setuptools.setup(
         "Typing :: Typed",
     ],
     package_data={"": [],
-                  "dag_cbor": ["dag_cbor/py.typed"],
+                  "dag_cbor": ["py.typed"],
                  },
     install_requires=[
         "py-cid",

@@ -13,6 +13,8 @@
       of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)
 """
 
+from typing import Any, Dict
+
 class CBORError(Exception):
     """
         Parent class for all errors due to the CBOR specification.
@@ -49,7 +51,7 @@ class DAGCBORDecodingError(CBORDecodingError, DAGCBORError):
     """
     ...
 
-def _canonical_order_dict(value: dict) -> dict:
+def _canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
     try:
         utf8key_key_val_pairs = [(k.encode("utf-8", errors="strict"), k, v) for k, v in value.items()]
     except UnicodeError as e:
@@ -58,7 +60,7 @@ def _canonical_order_dict(value: dict) -> dict:
     return {k: v for _, k, v in sorted_utf8key_key_val_pairs}
 
 
-def _check_key_compliance(value: dict) -> None:
+def _check_key_compliance(value: Dict[str, Any]) -> None:
     """ Check keys for DAG-CBOR compliance. """
     for k in value.keys():
         if not isinstance(k, str):
@@ -67,11 +69,11 @@ def _check_key_compliance(value: dict) -> None:
         raise CBOREncodingError("Keys for maps must be unique.")
 
 
-def check_key_compliance(value: dict) -> None:
+def check_key_compliance(value: Dict[str, Any]) -> None:
     """ Check keys for DAG-CBOR compliance. """
     _check_key_compliance(value)
 
-def canonical_order_dict(value: dict) -> dict:
+def canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
     """
         Returns a dictionary with canonically ordered keys, according to the DAG-CBOR specification.
         Specifically, keys are sorted increasingly by the lexicographic ordering of the corresponding
