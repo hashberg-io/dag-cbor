@@ -14,6 +14,7 @@
 """
 
 from typing import Any, Dict
+from typing_validation import validate
 
 class CBORError(Exception):
     """
@@ -71,6 +72,7 @@ def _check_key_compliance(value: Dict[str, Any]) -> None:
 
 def check_key_compliance(value: Dict[str, Any]) -> None:
     """ Check keys for DAG-CBOR compliance. """
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)
 
 def canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
@@ -79,6 +81,7 @@ def canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
         Specifically, keys are sorted increasingly by the lexicographic ordering of the corresponding
         UTF-8 bytestrings.
     """
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)
     # sort keys canonically
     return _canonical_order_dict(value)

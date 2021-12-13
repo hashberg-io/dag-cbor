@@ -28,6 +28,7 @@ from io import BufferedIOBase, BytesIO
 import math
 import struct
 from typing import Any, Dict, List, Optional, overload, Union
+from typing_validation import validate
 
 import cid # type: ignore
 
@@ -69,6 +70,8 @@ def encode(data: "EncodableType", stream: Optional[BufferedIOBase] = None) -> Un
                 ...
         ```
     """
+    validate(data, EncodableType)
+    validate(stream, Optional[BufferedIOBase])
     if stream is None:
         internal_stream = BytesIO()
         _encode(internal_stream, data)

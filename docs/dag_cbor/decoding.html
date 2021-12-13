@@ -72,7 +72,9 @@ and allow only part of the stream to be decoded.</p>
 from io import BufferedIOBase, BytesIO
 import math
 import struct
-from typing import Callable, Optional, Tuple, Union
+from typing import Any, Dict, Callable, List, Optional, Tuple, Union
+from typing_validation import validate
+
 
 import cid # type: ignore
 
@@ -138,6 +140,9 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             [0, 1]
         ```
     &#34;&#34;&#34;
+    validate(stream_or_bytes, Union[BufferedIOBase, bytes])
+    validate(allow_concat, bool)
+    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
@@ -249,8 +254,8 @@ def _decode_str(stream: BufferedIOBase, length: int) -&gt; Tuple[str, int]:
     return (res.decode(encoding=&#34;utf-8&#34;, errors=&#34;strict&#34;), length)
 
 def _decode_list(stream: BufferedIOBase, length: int, *,
-                 callback: Optional[DecodeCallback]) -&gt; Tuple[list, int]:
-    l: list = []
+                 callback: Optional[DecodeCallback]) -&gt; Tuple[List[Any], int]:
+    l: List[Any] = []
     for i in range(length):
         try:
             item, _ = _decode_item(stream, callback=callback)
@@ -260,8 +265,8 @@ def _decode_list(stream: BufferedIOBase, length: int, *,
     return (l, 0)
 
 def _decode_dict(stream: BufferedIOBase, length: int,
-                 callback: Optional[DecodeCallback]) -&gt; Tuple[dict, int]:
-    d: dict = {}
+                 callback: Optional[DecodeCallback]) -&gt; Tuple[Dict[str, Any], int]:
+    d: Dict[str, Any] = {}
     for i in range(length):
         try:
             k, _ = _decode_item(stream, callback=callback)
@@ -411,6 +416,9 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
             [0, 1]
         ```
     &#34;&#34;&#34;
+    validate(stream_or_bytes, Union[BufferedIOBase, bytes])
+    validate(allow_concat, bool)
+    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:

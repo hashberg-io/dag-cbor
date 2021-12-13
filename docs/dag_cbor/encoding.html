@@ -72,7 +72,8 @@ and the number of bytes written is returned:</p>
 from io import BufferedIOBase, BytesIO
 import math
 import struct
-from typing import Optional, overload, Union
+from typing import Any, Dict, List, Optional, overload, Union
+from typing_validation import validate
 
 import cid # type: ignore
 
@@ -114,6 +115,8 @@ def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = Non
                 ...
         ```
     &#34;&#34;&#34;
+    validate(data, EncodableType)
+    validate(stream, Optional[BufferedIOBase])
     if stream is None:
         internal_stream = BytesIO()
         _encode(internal_stream, data)
@@ -197,13 +200,13 @@ def _encode_str(stream: BufferedIOBase, value: str) -&gt; int:
     stream.write(utf8_value)
     return num_head_bytes+len(utf8_value)
 
-def _encode_list(stream: BufferedIOBase, value: list) -&gt; int:
+def _encode_list(stream: BufferedIOBase, value: List[Any]) -&gt; int:
     num_bytes_written = _encode_head(stream, 0x4, len(value))
     for item in value:
         num_bytes_written += _encode(stream, item)
     return num_bytes_written
 
-def _encode_dict(stream: BufferedIOBase, value: dict) -&gt; int:
+def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -&gt; int:
     _check_key_compliance(value)
     # sort keys canonically
     try:
@@ -297,6 +300,8 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
                 ...
         ```
     &#34;&#34;&#34;
+    validate(data, EncodableType)
+    validate(stream, Optional[BufferedIOBase])
     if stream is None:
         internal_stream = BytesIO()
         _encode(internal_stream, data)

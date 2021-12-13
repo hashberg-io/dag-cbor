@@ -1,6 +1,6 @@
 # `dag-cbor`: A Python implementation of [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
 
-[![Generic badge](https://img.shields.io/badge/python-3.6+-green.svg)](https://docs.python.org/3.6/)
+[![Generic badge](https://img.shields.io/badge/python-3.7+-green.svg)](https://docs.python.org/3.7/)
 ![PyPI version shields.io](https://img.shields.io/pypi/v/dag-cbor.svg)
 [![PyPI status](https://img.shields.io/pypi/status/dag-cbor.svg)](https://pypi.python.org/pypi/dag-cbor/)
 [![Checked with Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://github.com/python/mypy)

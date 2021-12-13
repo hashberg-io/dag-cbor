@@ -53,6 +53,9 @@ of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)</li
       of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)
 &#34;&#34;&#34;
 
+from typing import Any, Dict
+from typing_validation import validate
+
 class CBORError(Exception):
     &#34;&#34;&#34;
         Parent class for all errors due to the CBOR specification.
@@ -89,7 +92,7 @@ class DAGCBORDecodingError(CBORDecodingError, DAGCBORError):
     &#34;&#34;&#34;
     ...
 
-def _canonical_order_dict(value: dict) -&gt; dict:
+def _canonical_order_dict(value: Dict[str, Any]) -&gt; Dict[str, Any]:
     try:
         utf8key_key_val_pairs = [(k.encode(&#34;utf-8&#34;, errors=&#34;strict&#34;), k, v) for k, v in value.items()]
     except UnicodeError as e:
@@ -98,7 +101,7 @@ def _canonical_order_dict(value: dict) -&gt; dict:
     return {k: v for _, k, v in sorted_utf8key_key_val_pairs}
 
 
-def _check_key_compliance(value: dict) -&gt; None:
+def _check_key_compliance(value: Dict[str, Any]) -&gt; None:
     &#34;&#34;&#34; Check keys for DAG-CBOR compliance. &#34;&#34;&#34;
     for k in value.keys():
         if not isinstance(k, str):
@@ -107,16 +110,18 @@ def _check_key_compliance(value: dict) -&gt; None:
         raise CBOREncodingError(&#34;Keys for maps must be unique.&#34;)
 
 
-def check_key_compliance(value: dict) -&gt; None:
+def check_key_compliance(value: Dict[str, Any]) -&gt; None:
     &#34;&#34;&#34; Check keys for DAG-CBOR compliance. &#34;&#34;&#34;
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)
 
-def canonical_order_dict(value: dict) -&gt; dict:
+def canonical_order_dict(value: Dict[str, Any]) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;
         Returns a dictionary with canonically ordered keys, according to the DAG-CBOR specification.
         Specifically, keys are sorted increasingly by the lexicographic ordering of the corresponding
         UTF-8 bytestrings.
     &#34;&#34;&#34;
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)
     # sort keys canonically
     return _canonical_order_dict(value)</code></pre>
@@ -130,7 +135,7 @@ def canonical_order_dict(value: dict) -&gt; dict:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.utils.canonical_order_dict"><code class="name flex">
-<span>def <span class="ident">canonical_order_dict</span></span>(<span>value: dict) ‑> dict</span>
+<span>def <span class="ident">canonical_order_dict</span></span>(<span>value: Dict[str, Any]) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns a dictionary with canonically ordered keys, according to the DAG-CBOR specification.
@@ -140,19 +145,20 @@ UTF-8 bytestrings.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def canonical_order_dict(value: dict) -&gt; dict:
+<pre><code class="python">def canonical_order_dict(value: Dict[str, Any]) -&gt; Dict[str, Any]:
     &#34;&#34;&#34;
         Returns a dictionary with canonically ordered keys, according to the DAG-CBOR specification.
         Specifically, keys are sorted increasingly by the lexicographic ordering of the corresponding
         UTF-8 bytestrings.
     &#34;&#34;&#34;
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)
     # sort keys canonically
     return _canonical_order_dict(value)</code></pre>
 </details>
 </dd>
 <dt id="dag_cbor.utils.check_key_compliance"><code class="name flex">
-<span>def <span class="ident">check_key_compliance</span></span>(<span>value: dict) ‑> None</span>
+<span>def <span class="ident">check_key_compliance</span></span>(<span>value: Dict[str, Any]) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check keys for DAG-CBOR compliance.</p></div>
@@ -160,8 +166,9 @@ UTF-8 bytestrings.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def check_key_compliance(value: dict) -&gt; None:
+<pre><code class="python">def check_key_compliance(value: Dict[str, Any]) -&gt; None:
     &#34;&#34;&#34; Check keys for DAG-CBOR compliance. &#34;&#34;&#34;
+    validate(value, Dict[str, Any])
     _check_key_compliance(value)</code></pre>
 </details>
 </dd>

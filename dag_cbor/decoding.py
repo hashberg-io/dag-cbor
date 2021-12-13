@@ -28,6 +28,8 @@ from io import BufferedIOBase, BytesIO
 import math
 import struct
 from typing import Any, Dict, Callable, List, Optional, Tuple, Union
+from typing_validation import validate
+
 
 import cid # type: ignore
 
@@ -93,6 +95,9 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             [0, 1]
         ```
     """
+    validate(stream_or_bytes, Union[BufferedIOBase, bytes])
+    validate(allow_concat, bool)
+    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
