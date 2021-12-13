@@ -22,10 +22,10 @@ This is a fully compliant Python implementation of the [DAG-CBOR codec](https://
 
 ## Install
 
-You can install this package with `pip`:
+You can install the latest release from PyPI as follows:
 
 ```
-pip install dag-cbor
+pip install --upgrade dag-cbor
 ```
 
 
