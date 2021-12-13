@@ -31,7 +31,7 @@ pip install dag-cbor
 
 ## Usage
 
-The core functionality of the library is performed by the `encode` and `decode` functions:
+The core functionality of the library is performed by the [`encode`](https://hashberg-io.github.io/dag-cbor/dag_cbor/encoding.html#dag_cbor.encoding.encode) and [`decode`](https://hashberg-io.github.io/dag-cbor/dag_cbor/decoding.html#dag_cbor.decoding.decode) functions:
 
 ```python
 >>> import dag_cbor
@@ -41,7 +41,7 @@ b'\xa2aa\x0cabfhello!'
 {'a': 12, 'b': 'hello!'}
 ```
 
-The `random` module contains functions to generate random data compatible with DAG-CBOR encoding:
+The [`random`](https://hashberg-io.github.io/dag-cbor/dag_cbor/random.html) module contains functions to generate random data compatible with DAG-CBOR encoding:
 
 ```python
 >>> import pprint
