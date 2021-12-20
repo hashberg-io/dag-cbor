@@ -30,9 +30,9 @@ import struct
 from typing import Any, Dict, Callable, List, Optional, Tuple, Union
 from typing_validation import validate
 
-from multiformats import CID
+from multiformats import multicodec, CID
 
-from .encoding import EncodableType
+from .encoding import EncodableType, _dag_cbor_code
 from .utils import CBORDecodingError, DAGCBORDecodingError
 
 DecodeCallback = Callable[[EncodableType, int], None]
@@ -46,7 +46,8 @@ DecodeCallback = Callable[[EncodableType, int], None]
 
 def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
-           callback: Optional["DecodeCallback"] = None) -> EncodableType:
+           callback: Optional["DecodeCallback"] = None,
+           require_multicodec: bool = False) -> EncodableType:
     """
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
 
@@ -93,14 +94,22 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             >>> dag_cbor.decode(bytes_remaining)
             [0, 1]
         ```
+
+        If the optional keyword argument `require_multicodec` is `True`, the data being decoded must includes the multicodec code for 'dag-cbor'
+        (see [`multicodec.unwrap`](https://github.com/hashberg-io/multiformats#multicodec)).
     """
     validate(stream_or_bytes, Union[BufferedIOBase, bytes])
     validate(allow_concat, bool)
-    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
+    validate(require_multicodec, bool)
+    # validate(callback, Optional[DecodeCallback]) # TODO: not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
         stream = stream_or_bytes
+    if require_multicodec:
+        code, _, stream = multicodec.unwrap_raw(stream)
+        if code != _dag_cbor_code:
+            raise DAGCBORDecodingError(f"Required 'dag-cbor' multicodec code {hex(_dag_cbor_code)}, unwrapped code {hex(code)} instead.")
     data, _ = _decode_item(stream, callback=callback)
     if allow_concat:
         return data

@@ -17,6 +17,7 @@ def test_int() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_bytes() -> None:
     """
@@ -27,6 +28,7 @@ def test_bytes() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_str() -> None:
     """
@@ -37,6 +39,7 @@ def test_str() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_bool_none() -> None:
     """
@@ -47,6 +50,7 @@ def test_bool_none() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_float() -> None:
     """
@@ -57,6 +61,7 @@ def test_float() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_list() -> None:
     """
@@ -65,9 +70,10 @@ def test_list() -> None:
     """
     with options(include_cid=False):
         test_data = rand_list(nsamples)
-        for i, x in enumerate(test_data):
-            error_msg = f"failed at #{i} = {repr(x)}"
-            assert x == decode(encode(x)), error_msg
+    for i, x in enumerate(test_data):
+        error_msg = f"failed at #{i} = {repr(x)}"
+        assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_dict() -> None:
     """
@@ -76,9 +82,10 @@ def test_dict() -> None:
     """
     with options(include_cid=False):
         test_data = rand_dict(nsamples)
-        for i, x in enumerate(test_data):
-            error_msg = f"failed at #{i} = {repr(x)}"
-            assert x == decode(encode(x)), error_msg
+    for i, x in enumerate(test_data):
+        error_msg = f"failed at #{i} = {repr(x)}"
+        assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 def test_cid() -> None:
     """
@@ -89,3 +96,4 @@ def test_cid() -> None:
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
