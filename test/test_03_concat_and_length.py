@@ -6,6 +6,7 @@
 
 from io import BytesIO
 from dag_cbor import encode, decode
+from dag_cbor.encoding import EncodableType
 from dag_cbor.random import rand_data
 
 nsamples = 1000
@@ -13,13 +14,13 @@ nconcat = 3
 
 class BytesReadCounter:
     """ Counter for bytes read while decoding. """
-    _num_bytes_read = 0
-    def __call__(self, _, num_bytes_read):
+    _num_bytes_read: int = 0
+    def __call__(self, _: EncodableType, num_bytes_read: int) -> None:
         self._num_bytes_read += num_bytes_read
-    def __int__(self):
+    def __int__(self) -> int:
         return self._num_bytes_read
 
-def test_decode_concat_length():
+def test_decode_concat_length() -> None:
     """
         Encodes random item samples with `dag_cbor.encoding.encode`, then concatenates the bytes of three items.
         Decodes with `dag_cbor.decoding.decode` allowing concatenation and checks that the correct number of bytes
@@ -39,7 +40,7 @@ def test_decode_concat_length():
         error_msg = f"failed at #{i}"
         assert len(stream.read()) == 0, error_msg
 
-def test_encode_length():
+def test_encode_length() -> None:
     """
         Encodes random item samples with `dag_cbor.encoding.encode` to a stream,
         then checks that the number of bytes written is the one returned by `encode`.

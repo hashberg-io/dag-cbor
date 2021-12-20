@@ -30,17 +30,17 @@ import struct
 from typing import Any, Dict, List, Optional, overload, Union
 from typing_validation import validate
 
-import cid # type: ignore
+from multiformats import CID
 
 from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
-EncodableType = Union[None, bool, int, float, bytes, str, list, dict, cid.cid.BaseCID]
+EncodableType = Union[None, bool, int, float, bytes, str, list, dict, CID]
 """
     Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:
 
     ```py
         EncodableType = Union[None, bool, int, float, bytes,
-                              str, list, dict, cid.cid.BaseCID]
+                              str, list, dict, multiformats.cid.CID]
     ```
 """
 
@@ -98,7 +98,7 @@ def _encode(stream: BufferedIOBase, value: EncodableType) -> int:
     if isinstance(value, dict):
         # major type 0x5
         return _encode_dict(stream, value)
-    if isinstance(value, cid.cid.BaseCID):
+    if isinstance(value, CID):
         # major type 0x6
         return _encode_cid(stream, value)
     if value is None:
@@ -179,9 +179,9 @@ def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
         num_bytes_written += _encode(stream, v)
     return num_bytes_written
 
-def _encode_cid(stream: BufferedIOBase, value: cid.cid.BaseCID) -> int:
+def _encode_cid(stream: BufferedIOBase, value: CID) -> int:
     num_bytes_written = _encode_head(stream, 0x6, 42)
-    num_bytes_written += _encode_bytes(stream, value.buffer)
+    num_bytes_written += _encode_bytes(stream, bytes(value))
     return num_bytes_written
 
 def _encode_bool(stream: BufferedIOBase, value: bool) -> int:

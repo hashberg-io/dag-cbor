@@ -30,8 +30,7 @@ import struct
 from typing import Any, Dict, Callable, List, Optional, Tuple, Union
 from typing_validation import validate
 
-
-import cid # type: ignore
+from multiformats import CID
 
 from .encoding import EncodableType
 from .utils import CBORDecodingError, DAGCBORDecodingError
@@ -238,7 +237,7 @@ def _decode_dict(stream: BufferedIOBase, length: int,
         raise DAGCBORDecodingError(f"Found only {len(d)} unique keys out of {length} key-value pairs.")
     return (d, 0)
 
-def _decode_cid(stream: BufferedIOBase, arg: int) -> Tuple[cid.cid.BaseCID, int]:
+def _decode_cid(stream: BufferedIOBase, arg: int) -> Tuple[CID, int]:
     if arg != 42:
         raise DAGCBORDecodingError(f"Error while decoding major type 0x6: tag {arg} is not allowed.")
     try:
@@ -247,7 +246,7 @@ def _decode_cid(stream: BufferedIOBase, arg: int) -> Tuple[cid.cid.BaseCID, int]
         raise CBORDecodingError("Error while decoding CID bytes.") from e
     if not isinstance(cid_bytes, bytes):
         raise DAGCBORDecodingError(f"Expected CID bytes, found data of type {type(cid_bytes)} instead.")
-    return (cid.from_bytes(cid_bytes), num_bytes_read)
+    return (CID.decode(cid_bytes), num_bytes_read)
 
 def _decode_bool_none(stream: BufferedIOBase, arg: int) -> Tuple[Optional[bool], int]:
     if arg == 20:

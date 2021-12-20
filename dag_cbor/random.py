@@ -11,7 +11,7 @@
     - `bool_none` for `False`, `True` or `None` (33.3% each)
     - `list` for lists of uniformly distributed length, with random elements of any type
     - `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
-    - `cid` for CID data (instance of `BaseCID` from the [`py-cid`](https://github.com/ipld/py-cid) package)
+    - `cid` for CID data (instance of `CID` from the [`multiformats`](https://github.com/hashberg-io/multiformats) library)
 
     The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`, e.g.:
 
@@ -76,18 +76,16 @@
 
 
 from contextlib import contextmanager
-from hashlib import sha3_512
 import math
 from random import Random # pylint: disable = import-self
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, Iterator, List, Mapping, Optional
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
 from typing_validation import validate
 
-import cid # type: ignore
-import multihash # type: ignore
+from multiformats import multicodec, multibase, multihash, CID
 
-from .encoding import EncodableType
+from .encoding import encode, EncodableType
 from .utils import _canonical_order_dict
 
 _min_int = -18446744073709551616
@@ -632,37 +630,56 @@ def _rand_float(n: Optional[int] = None) -> Iterator[float]:
             yield x-x%eps
             i += 1
 
-def rand_cid(n: Optional[int] = None) -> Iterator[None]:
-    """
-        Generates a stream of random `CID` data:
+_cid_multibase = multibase.get("base58btc") # the default base for binary CIDs
+_cid_version = 1
+_cid_multicodec = multicodec.get("dag-cbor")
+_cid_multihash = multihash.get("sha3-512")
 
-        - CID v1
-        - codec 'dag-cbor'
-        - hash function 'sha3-512'
-        - raw digest: 512 random bits
+def rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[EncodableType, CID]]:
+    """
+        Generates a stream of random dag-cbor data and associated CIDs:
+
+        - multibase 'base32'
+        - CIDv1
+        - multicodec 'dag-cbor'
+        - multihash 'sha3-512', with full 512-bit digest
 
         If a number `n` is given, that number of samples is yelded.
     """
     validate(n, Optional[int])
-    return _rand_cid(n)
+    return _rand_data_cid(n, max_nesting=max_nesting)
 
-def _rand_cid(n: Optional[int] = None) -> Iterator[None]:
+def rand_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[CID]:
+    """
+        Generates a stream of random CIDs:
+
+        - multibase 'base32'
+        - CIDv1
+        - multicodec 'dag-cbor'
+        - multihash 'sha3-512', with full 512-bit digest
+
+        If a number `n` is given, that number of samples is yelded.
+    """
+    validate(n, Optional[int])
+    return _rand_cid(n, max_nesting=max_nesting)
+
+def _rand_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[CID]:
+    return (cid for _, cid in _rand_data_cid(n, max_nesting=max_nesting))
+
+def _rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[EncodableType, CID]]:
     if n is not None and n < 0:
         raise ValueError()
-    hashfun = sha3_512
-    hashcode = "sha3-512"
-    hashlen = 0x40
-    cid_version = 1
-    cid_codec = "dag-cbor"
-    bytes_generator = _rand_bytes(length=hashlen)
+    if max_nesting is None:
+        max_nesting = _options["max_nesting"]
+    elif max_nesting < 0:
+        raise ValueError("Value for max_nesting is negative.")
     i = 0
+    rand_data_generator = _rand_data(max_nesting=max_nesting-1)
     while n is None or i < n:
         try:
-            payload = next(bytes_generator)
-            h = hashfun()
-            h.update(payload)
-            digest = h.digest()
+            dag_cbor_data = next(rand_data_generator)
+            binary_data = encode(dag_cbor_data)
         except StopIteration as e:
             raise RuntimeError("Random digest stream is infinite, this should not happen.") from e
-        yield cid.make_cid(cid_version, cid_codec, multihash.encode(digest, hashcode))
+        yield (dag_cbor_data, CID(_cid_multibase, _cid_version, _cid_multicodec, _cid_multihash.digest(binary_data)))
         i += 1

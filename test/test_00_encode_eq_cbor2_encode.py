@@ -90,4 +90,4 @@ def test_cid() -> None:
     test_data = rand_cid(nsamples)
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"
-        assert cbor2.dumps(cbor2.CBORTag(42, x.buffer)) == encode(x), error_msg
+        assert cbor2.dumps(cbor2.CBORTag(42, bytes(x))) == encode(x), error_msg

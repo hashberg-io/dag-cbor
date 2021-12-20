@@ -38,4 +38,4 @@ jobs:
     - name: Lint with pylint
       run: |
         pylint --errors-only --rcfile=.pylintrc dag_cbor
-        pylint --exit-zero --rcfile=.pylintrc dag_cbor
+        pylint --exit-zero --rcfile=.pylintrc --disable=fixme dag_cbor

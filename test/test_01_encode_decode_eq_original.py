@@ -8,7 +8,7 @@ from dag_cbor.random import rand_list, rand_dict, rand_int, rand_bytes, rand_str
 
 nsamples = 1000
 
-def test_int():
+def test_int() -> None:
     """
         Encodes random `int` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -18,7 +18,7 @@ def test_int():
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
 
-def test_bytes():
+def test_bytes() -> None:
     """
         Encodes random `bytes` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -28,7 +28,7 @@ def test_bytes():
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
 
-def test_str():
+def test_str() -> None:
     """
         Encodes random `str` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -38,7 +38,7 @@ def test_str():
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
 
-def test_bool_none():
+def test_bool_none() -> None:
     """
         Encodes random `Optional[bool]` or samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -48,7 +48,7 @@ def test_bool_none():
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
 
-def test_float():
+def test_float() -> None:
     """
         Encodes random `float` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -58,7 +58,7 @@ def test_float():
         error_msg = f"failed at #{i} = {repr(x)}"
         assert x == decode(encode(x)), error_msg
 
-def test_list():
+def test_list() -> None:
     """
         Encodes random `list` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -69,7 +69,7 @@ def test_list():
             error_msg = f"failed at #{i} = {repr(x)}"
             assert x == decode(encode(x)), error_msg
 
-def test_dict():
+def test_dict() -> None:
     """
         Encodes random `dict` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
@@ -80,7 +80,7 @@ def test_dict():
             error_msg = f"failed at #{i} = {repr(x)}"
             assert x == decode(encode(x)), error_msg
 
-def test_cid():
+def test_cid() -> None:
     """
         Encodes random CID samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
