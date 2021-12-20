@@ -38,7 +38,7 @@
     data, which is not natively handled by `cbor2`).
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .encoding import encode as encode
 from .decoding import decode as decode

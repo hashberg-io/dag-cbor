@@ -75,7 +75,7 @@ import struct
 from typing import Any, Dict, List, Optional, overload, Union
 from typing_validation import validate
 
-from multiformats import CID
+from multiformats import varint, multicodec, CID
 
 from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
@@ -89,15 +89,20 @@ EncodableType = Union[None, bool, int, float, bytes, str, list, dict, CID]
     ```
 &#34;&#34;&#34;
 
+_dag_cbor_multicodec = multicodec.get(&#34;dag-cbor&#34;)
+_dag_cbor_code: int = _dag_cbor_multicodec.code
+_dag_cbor_code_bytes: bytes = varint.encode(_dag_cbor_code)
+_dag_cbor_code_nbytes: int = len(_dag_cbor_code_bytes)
+
 @overload
-def encode(data: &#34;EncodableType&#34;, stream: None = None) -&gt; bytes:
+def encode(data: &#34;EncodableType&#34;, stream: None = None, *, include_multicodec: bool = False) -&gt; bytes:
     ... # pragma: no cover
 
 @overload
-def encode(data: &#34;EncodableType&#34;, stream: BufferedIOBase) -&gt; int:
+def encode(data: &#34;EncodableType&#34;, stream: BufferedIOBase, *, include_multicodec: bool = False) -&gt; int:
     ... # pragma: no cover
 
-def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = None) -&gt; Union[bytes, int]:
+def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = None, *, include_multicodec: bool = False) -&gt; Union[bytes, int]:
     &#34;&#34;&#34;
         Encodes the given `data` with the DAG-CBOR codec.
 
@@ -114,14 +119,27 @@ def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = Non
             def encode(data: EncodableType, stream: None = None) -&gt; bytes:
                 ...
         ```
+
+        If the optional keyword argument `include_multicodec` is `True`, the encoded data includes the multicodec code for &#39;dag-cbor&#39;
+        (see [`multicodec.wrap`](https://github.com/hashberg-io/multiformats#multicodec)).
+
     &#34;&#34;&#34;
     validate(data, EncodableType)
     validate(stream, Optional[BufferedIOBase])
+    validate(include_multicodec, bool)
     if stream is None:
         internal_stream = BytesIO()
+        if include_multicodec:
+            internal_stream.write(_dag_cbor_code_bytes)
         _encode(internal_stream, data)
         return internal_stream.getvalue()
-    return _encode(stream, data)
+    num_bytes = 0
+    if include_multicodec:
+        stream.write(_dag_cbor_code_bytes)
+        num_bytes += _dag_cbor_code_nbytes
+    num_bytes += _encode(stream, data)
+    return num_bytes
+
 
 def _encode(stream: BufferedIOBase, value: EncodableType) -&gt; int:
     # pylint: disable = too-many-return-statements, too-many-branches
@@ -266,7 +284,7 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.encoding.encode"><code class="name flex">
-<span>def <span class="ident">encode</span></span>(<span>data: <a title="dag_cbor.encoding.EncodableType" href="#dag_cbor.encoding.EncodableType">EncodableType</a>, stream: Optional[io.BufferedIOBase] = None) ‑> Union[bytes, int]</span>
+<span>def <span class="ident">encode</span></span>(<span>data: <a title="dag_cbor.encoding.EncodableType" href="#dag_cbor.encoding.EncodableType">EncodableType</a>, stream: Optional[io.BufferedIOBase] = None, *, include_multicodec: bool = False) ‑> Union[bytes, int]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Encodes the given <code>data</code> with the DAG-CBOR codec.</p>
@@ -277,12 +295,14 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
 <p>Otherwise, the encoded data is written to an internal stream and the bytes are returned at the end (as a <code>bytes</code> object).</p>
 <pre><code class="language-py">    def encode(data: EncodableType, stream: None = None) -&gt; bytes:
         ...
-</code></pre></div>
+</code></pre>
+<p>If the optional keyword argument <code>include_multicodec</code> is <code>True</code>, the encoded data includes the multicodec code for 'dag-cbor'
+(see <a href="https://github.com/hashberg-io/multiformats#multicodec"><code>multicodec.wrap</code></a>).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = None) -&gt; Union[bytes, int]:
+<pre><code class="python">def encode(data: &#34;EncodableType&#34;, stream: Optional[BufferedIOBase] = None, *, include_multicodec: bool = False) -&gt; Union[bytes, int]:
     &#34;&#34;&#34;
         Encodes the given `data` with the DAG-CBOR codec.
 
@@ -299,14 +319,26 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
             def encode(data: EncodableType, stream: None = None) -&gt; bytes:
                 ...
         ```
+
+        If the optional keyword argument `include_multicodec` is `True`, the encoded data includes the multicodec code for &#39;dag-cbor&#39;
+        (see [`multicodec.wrap`](https://github.com/hashberg-io/multiformats#multicodec)).
+
     &#34;&#34;&#34;
     validate(data, EncodableType)
     validate(stream, Optional[BufferedIOBase])
+    validate(include_multicodec, bool)
     if stream is None:
         internal_stream = BytesIO()
+        if include_multicodec:
+            internal_stream.write(_dag_cbor_code_bytes)
         _encode(internal_stream, data)
         return internal_stream.getvalue()
-    return _encode(stream, data)</code></pre>
+    num_bytes = 0
+    if include_multicodec:
+        stream.write(_dag_cbor_code_bytes)
+        num_bytes += _dag_cbor_code_nbytes
+    num_bytes += _encode(stream, data)
+    return num_bytes</code></pre>
 </details>
 </dd>
 </dl>

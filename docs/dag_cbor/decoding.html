@@ -75,9 +75,9 @@ import struct
 from typing import Any, Dict, Callable, List, Optional, Tuple, Union
 from typing_validation import validate
 
-from multiformats import CID
+from multiformats import multicodec, CID
 
-from .encoding import EncodableType
+from .encoding import EncodableType, _dag_cbor_code
 from .utils import CBORDecodingError, DAGCBORDecodingError
 
 DecodeCallback = Callable[[EncodableType, int], None]
@@ -91,7 +91,8 @@ DecodeCallback = Callable[[EncodableType, int], None]
 
 def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
-           callback: Optional[&#34;DecodeCallback&#34;] = None) -&gt; EncodableType:
+           callback: Optional[&#34;DecodeCallback&#34;] = None,
+           require_multicodec: bool = False) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
 
@@ -138,14 +139,22 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
             [0, 1]
         ```
+
+        If the optional keyword argument `require_multicodec` is `True`, the data being decoded must includes the multicodec code for &#39;dag-cbor&#39;
+        (see [`multicodec.unwrap`](https://github.com/hashberg-io/multiformats#multicodec)).
     &#34;&#34;&#34;
     validate(stream_or_bytes, Union[BufferedIOBase, bytes])
     validate(allow_concat, bool)
-    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
+    validate(require_multicodec, bool)
+    # validate(callback, Optional[DecodeCallback]) # TODO: not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
         stream = stream_or_bytes
+    if require_multicodec:
+        code, _, stream = multicodec.unwrap_raw(stream)
+        if code != _dag_cbor_code:
+            raise DAGCBORDecodingError(f&#34;Required &#39;dag-cbor&#39; multicodec code {hex(_dag_cbor_code)}, unwrapped code {hex(code)} instead.&#34;)
     data, _ = _decode_item(stream, callback=callback)
     if allow_concat:
         return data
@@ -320,7 +329,7 @@ def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Tuple[Optional[boo
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.decoding.decode"><code class="name flex">
-<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[ForwardRef('<a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a>')] = None) ‑> Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, multiformats.cid.CID]</span>
+<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[ForwardRef('<a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a>')] = None, require_multicodec: bool = False) ‑> Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, multiformats.cid.CID]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p>
@@ -360,14 +369,17 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
     3
     &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
     [0, 1]
-</code></pre></div>
+</code></pre>
+<p>If the optional keyword argument <code>require_multicodec</code> is <code>True</code>, the data being decoded must includes the multicodec code for 'dag-cbor'
+(see <a href="https://github.com/hashberg-io/multiformats#multicodec"><code>multicodec.unwrap</code></a>).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
-           callback: Optional[&#34;DecodeCallback&#34;] = None) -&gt; EncodableType:
+           callback: Optional[&#34;DecodeCallback&#34;] = None,
+           require_multicodec: bool = False) -&gt; EncodableType:
     &#34;&#34;&#34;
         Decodes and returns a single data item from the given `stream_or_bytes`, with the DAG-CBOR codec.
 
@@ -414,14 +426,22 @@ is decoded from the stream/bytes. A simple use for this callback is to count the
             &gt;&gt;&gt; dag_cbor.decode(bytes_remaining)
             [0, 1]
         ```
+
+        If the optional keyword argument `require_multicodec` is `True`, the data being decoded must includes the multicodec code for &#39;dag-cbor&#39;
+        (see [`multicodec.unwrap`](https://github.com/hashberg-io/multiformats#multicodec)).
     &#34;&#34;&#34;
     validate(stream_or_bytes, Union[BufferedIOBase, bytes])
     validate(allow_concat, bool)
-    # validate(callback, Optional[DecodeCallback]) # not yet supported by typing_validation
+    validate(require_multicodec, bool)
+    # validate(callback, Optional[DecodeCallback]) # TODO: not yet supported by typing_validation
     if isinstance(stream_or_bytes, bytes):
         stream: BufferedIOBase = BytesIO(stream_or_bytes)
     else:
         stream = stream_or_bytes
+    if require_multicodec:
+        code, _, stream = multicodec.unwrap_raw(stream)
+        if code != _dag_cbor_code:
+            raise DAGCBORDecodingError(f&#34;Required &#39;dag-cbor&#39; multicodec code {hex(_dag_cbor_code)}, unwrapped code {hex(code)} instead.&#34;)
     data, _ = _decode_item(stream, callback=callback)
     if allow_concat:
         return data
