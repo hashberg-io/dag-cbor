@@ -34,13 +34,22 @@ from multiformats import varint, multicodec, CID
 
 from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
-EncodableType = Union[None, bool, int, float, bytes, str, list, dict, CID]
+FlatEncodableType = Union[None, bool, int, float, bytes, str, CID]
+"""
+    Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec:
+
+    ```py
+    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID]
+    ```
+"""
+
+EncodableType = Union[FlatEncodableType, List[Any], Dict[str, Any]]
 """
     Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:
 
     ```py
-        EncodableType = Union[None, bool, int, float, bytes,
-                              str, list, dict, multiformats.cid.CID]
+    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID,
+                 typing.List[typing.Any], typing.Dict[str, typing.Any]]
     ```
 """
 

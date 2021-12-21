@@ -36,10 +36,30 @@
     Because the CBOR codec can encode/decode all data handled by the DAG-CBOR codec, we use an established CBOR implementation
     as the reference when testing, namely the [`cbor2`](https://github.com/agronholm/cbor2) package (with the exception of CID
     data, which is not natively handled by `cbor2`).
+
+    The `EncodableType` alias captures the type of objects that, at top level, can be encoded using this library:
+
+    ```py
+    >>> dag_cbor.EncodableType
+    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID,
+                 typing.List[typing.Any], typing.Dict[str, typing.Any]]
+    ```
+
+    Because of limited support for recursive types (see [Mypy issue #731]https://github.com/python/mypy/issues/731)),
+    `EncodableType` does not yet restrict the type of list items and dictionary values.
 """
 
 __version__ = "0.1.2"
 
-from .encoding import encode as encode
-from .decoding import decode as decode
-from . import random as random
+from .encoding import encode, EncodableType
+from .decoding import decode
+
+# explicit re-exports
+__all__ = [
+    "encode",
+    "decode",
+    "EncodableType"
+]
+
+# remove memberse already documented in the original sub-modules
+__pdoc__ = {name: False for name in ["encode", "decode"]}

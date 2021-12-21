@@ -79,13 +79,22 @@ from multiformats import varint, multicodec, CID
 
 from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_compliance
 
-EncodableType = Union[None, bool, int, float, bytes, str, list, dict, CID]
+FlatEncodableType = Union[None, bool, int, float, bytes, str, CID]
+&#34;&#34;&#34;
+    Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec:
+
+    ```py
+    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID]
+    ```
+&#34;&#34;&#34;
+
+EncodableType = Union[FlatEncodableType, List[Any], Dict[str, Any]]
 &#34;&#34;&#34;
     Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:
 
     ```py
-        EncodableType = Union[None, bool, int, float, bytes,
-                              str, list, dict, multiformats.cid.CID]
+    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID,
+                 typing.List[typing.Any], typing.Dict[str, typing.Any]]
     ```
 &#34;&#34;&#34;
 
@@ -274,8 +283,14 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
 <dt id="dag_cbor.encoding.EncodableType"><code class="name">var <span class="ident">EncodableType</span></code></dt>
 <dd>
 <div class="desc"><p>Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:</p>
-<pre><code class="language-py">    EncodableType = Union[None, bool, int, float, bytes,
-                          str, list, dict, multiformats.cid.CID]
+<pre><code class="language-py">typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID,
+             typing.List[typing.Any], typing.Dict[str, typing.Any]]
+</code></pre></div>
+</dd>
+<dt id="dag_cbor.encoding.FlatEncodableType"><code class="name">var <span class="ident">FlatEncodableType</span></code></dt>
+<dd>
+<div class="desc"><p>Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec:</p>
+<pre><code class="language-py">typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID]
 </code></pre></div>
 </dd>
 </dl>
@@ -360,6 +375,7 @@ def _encode_float(stream: BufferedIOBase, value: float) -&gt; int:
 <li><h3><a href="#header-variables">Global variables</a></h3>
 <ul class="">
 <li><code><a title="dag_cbor.encoding.EncodableType" href="#dag_cbor.encoding.EncodableType">EncodableType</a></code></li>
+<li><code><a title="dag_cbor.encoding.FlatEncodableType" href="#dag_cbor.encoding.FlatEncodableType">FlatEncodableType</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

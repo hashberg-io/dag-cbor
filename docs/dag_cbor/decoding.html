@@ -329,7 +329,7 @@ def _decode_bool_none(stream: BufferedIOBase, arg: int) -&gt; Tuple[Optional[boo
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="dag_cbor.decoding.decode"><code class="name flex">
-<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[ForwardRef('<a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a>')] = None, require_multicodec: bool = False) ‑> Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, multiformats.cid.CID]</span>
+<span>def <span class="ident">decode</span></span>(<span>stream_or_bytes: Union[io.BufferedIOBase, bytes], *, allow_concat: bool = False, callback: Optional[ForwardRef('<a title="dag_cbor.decoding.DecodeCallback" href="#dag_cbor.decoding.DecodeCallback">DecodeCallback</a>')] = None, require_multicodec: bool = False) ‑> Union[ForwardRef(None), bool, int, float, bytes, str, multiformats.cid.CID, List[Any], Dict[str, Any]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Decodes and returns a single data item from the given <code>stream_or_bytes</code>, with the DAG-CBOR codec.</p>

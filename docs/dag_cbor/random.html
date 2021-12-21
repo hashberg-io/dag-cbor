@@ -975,7 +975,7 @@ If a number <code>n</code> is given, that number of samples is yelded.</p>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_data"><code class="name flex">
-<span>def <span class="ident">rand_data</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None) ‑> Iterator[Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, multiformats.cid.CID]]</span>
+<span>def <span class="ident">rand_data</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None) ‑> Iterator[Union[ForwardRef(None), bool, int, float, bytes, str, multiformats.cid.CID, List[Any], Dict[str, Any]]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random data data.
@@ -1023,7 +1023,7 @@ maximum nesting level for containers:</p>
 </details>
 </dd>
 <dt id="dag_cbor.random.rand_data_cid"><code class="name flex">
-<span>def <span class="ident">rand_data_cid</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None) ‑> Iterator[Tuple[Union[ForwardRef(None), bool, int, float, bytes, str, list, dict, multiformats.cid.CID], multiformats.cid.CID]]</span>
+<span>def <span class="ident">rand_data_cid</span></span>(<span>n: Optional[int] = None, *, max_nesting: Optional[int] = None) ‑> Iterator[Tuple[Union[ForwardRef(None), bool, int, float, bytes, str, multiformats.cid.CID, List[Any], Dict[str, Any]], multiformats.cid.CID]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generates a stream of random dag-cbor data and associated CIDs:</p>
