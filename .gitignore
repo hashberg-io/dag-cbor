@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# local README proof from readme_renderer
+README-PROOF.html

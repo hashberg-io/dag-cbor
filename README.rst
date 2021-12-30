@@ -1,5 +1,5 @@
 dag-cbor: A Python implementation of the `DAG-CBOR codec <https://ipld.io/specs/codecs/dag-cbor/spec/>`_
-============================================================================================
+========================================================================================================
 
 .. image:: https://img.shields.io/badge/python-3.7+-green.svg
     :target: https://docs.python.org/3.7/
