@@ -1,15 +1,15 @@
 """
     Error classes and utility functions.
 
-    Errors raised because of CBOR codec specifications are instances of `CBORError`, while errors
-    raised because of additional restrictions imposed by the DAG-CBOR codec are instances of `DAGCBORError`,
-    a subclass of `CBORError`. Both kind of errors are then further specialised into encoding and decoding errors,
+    Errors raised because of CBOR codec specifications are instances of :class:`CBORError`, while errors
+    raised because of additional restrictions imposed by the DAG-CBOR codec are instances of :class:`DAGCBORError`,
+    a subclass of :class:`CBORError`. Both kind of errors are then further specialised into encoding and decoding errors,
     depending on where they are raised.
 
     There are two utility functions dealing with dictionary keys:
 
-    - `check_key_compliance` enforces that dictionary keys myst be `str` instances and unique
-    - `canonical_order_dict` applies the above and then sorts the dictionary keys by the lexicographic ordering
+    - :func:`check_key_compliance` enforces that dictionary keys myst be :obj:`str` instances and unique
+    - :func:`canonical_order_dict` applies the above and then sorts the dictionary keys by the lexicographic ordering
       of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)
 """
 
@@ -53,21 +53,23 @@ class DAGCBORDecodingError(CBORDecodingError, DAGCBORError):
     ...
 
 def _canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
-    try:
-        utf8key_key_val_pairs = [(k.encode("utf-8", errors="strict"), k, v) for k, v in value.items()]
-    except UnicodeError as e:
-        raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # try:
+    #     utf8key_key_val_pairs = [(k.encode("utf-8", errors="strict"), k, v) for k, v in value.items()]
+    # except UnicodeError as e:
+    #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
+    utf8key_key_val_pairs = [(k.encode("utf-8", errors="strict"), k, v) for k, v in value.items()]
     sorted_utf8key_key_val_pairs = sorted(utf8key_key_val_pairs, key=lambda i: i[0])
     return {k: v for _, k, v in sorted_utf8key_key_val_pairs}
 
 
 def _check_key_compliance(value: Dict[str, Any]) -> None:
     """ Check keys for DAG-CBOR compliance. """
-    for k in value.keys():
-        if not isinstance(k, str):
-            raise DAGCBOREncodingError("Keys for maps must be strings.")
-    if len(value.keys()) != len(set(value.keys())):
-        raise CBOREncodingError("Keys for maps must be unique.")
+    if not all(isinstance(k, str) for k in value.keys()):
+        raise DAGCBOREncodingError("Keys for maps must be strings.")
+    # if len(value.keys()) != len(set(value.keys())):
+    #     raise CBOREncodingError("Keys for maps must be unique.")
+    # # as far as I understand, the above should never happen for dictionary keys
 
 
 def check_key_compliance(value: Dict[str, Any]) -> None:

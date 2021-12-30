@@ -1,27 +1,5 @@
 """
     Encoding functions for DAG-CBOR codec.
-
-    The core functionality is performed by the `encode` function, which encods a value into a `bytes` object:
-
-    ```python
-        >>> import dag_cbor
-        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'})
-        b'\\xa2aa\\x0cabfhello!'
-    ```
-
-    A buffered binary stream (i.e. an instance of `io.BufferedIOBase`) can be passed to the `encode` function
-    using the optional keyword argument `stream`, in which case the encoded bytes are written to the stream
-    and the number of bytes written is returned:
-
-    ```python
-        >>> from io import BytesIO
-        >>> stream = BytesIO()
-        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'}, stream=stream)
-        13
-        >>> stream.getvalue()
-        b'\\xa2aa\\x0cabfhello!'
-    ```
-
 """
 
 from io import BufferedIOBase, BytesIO
@@ -36,21 +14,15 @@ from .utils import CBOREncodingError, DAGCBOREncodingError, _check_key_complianc
 
 FlatEncodableType = Union[None, bool, int, float, bytes, str, CID]
 """
-    Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec:
-
-    ```py
-    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID]
-    ```
+    Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec.
 """
 
 EncodableType = Union[FlatEncodableType, List[Any], Dict[str, Any]]
 """
-    Union of Python types that can be encoded by this implementation of the DAG-CBOR codec:
+    Union of Python types that can be encoded (at top level) by this implementation of the DAG-CBOR codec.
 
-    ```py
-    typing.Union[NoneType, bool, int, float, bytes, str, multiformats.cid.CID,
-                 typing.List[typing.Any], typing.Dict[str, typing.Any]]
-    ```
+    Because of limited support for recursive types (see `Mypy issue #731 <https://github.com/python/mypy/issues/731>`_),
+    the list items and dictionary values are not recursively typechecked.
 """
 
 _dag_cbor_multicodec = multicodec.get("dag-cbor")
@@ -59,33 +31,58 @@ _dag_cbor_code_bytes: bytes = varint.encode(_dag_cbor_code)
 _dag_cbor_code_nbytes: int = len(_dag_cbor_code_bytes)
 
 @overload
-def encode(data: "EncodableType", stream: None = None, *, include_multicodec: bool = False) -> bytes:
+def encode(data: EncodableType, stream: None = None, *, include_multicodec: bool = False) -> bytes:
     ... # pragma: no cover
 
 @overload
-def encode(data: "EncodableType", stream: BufferedIOBase, *, include_multicodec: bool = False) -> int:
+def encode(data: EncodableType, stream: BufferedIOBase, *, include_multicodec: bool = False) -> int:
     ... # pragma: no cover
 
-def encode(data: "EncodableType", stream: Optional[BufferedIOBase] = None, *, include_multicodec: bool = False) -> Union[bytes, int]:
-    """
-        Encodes the given `data` with the DAG-CBOR codec.
+def encode(data: EncodableType, stream: Optional[BufferedIOBase] = None, *, include_multicodec: bool = False) -> Union[bytes, int]:
+    r"""
+        Encodes the given data with the DAG-CBOR codec.
 
-        If a `stream` is given, the encoded data is written to the stream and the number of bytes written is returned:
+        By default, the encoded data is written to an internal stream and the bytes are returned at the end (as a `bytes` object).
 
-        ```py
-            def encode(data: EncodableType, stream: BufferedIOBase) -> int:
-                ...
-        ```
+        .. code-block:: python
 
-        Otherwise, the encoded data is written to an internal stream and the bytes are returned at the end (as a `bytes` object).
-
-        ```py
             def encode(data: EncodableType, stream: None = None) -> bytes:
                 ...
-        ```
 
-        If the optional keyword argument `include_multicodec` is `True`, the encoded data includes the multicodec code for 'dag-cbor'
-        (see [`multicodec.wrap`](https://github.com/hashberg-io/multiformats#multicodec)).
+        Example usage:
+
+        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'})
+        b'\xa2aa\x0cabfhello!'
+
+        If a ``stream`` is given, the encoded data is written to the stream and the number of bytes written is returned:
+
+        .. code-block:: python
+
+            def encode(data: EncodableType, stream: BufferedIOBase) -> int:
+                ...
+
+        Example usage with a stream:
+
+        >>> from io import BytesIO
+        >>> stream = BytesIO()
+        >>> dag_cbor.encode({'a': 12, 'b': 'hello!'}, stream=stream)
+        13
+        >>> stream.getvalue()
+        b'\xa2aa\x0cabfhello!'
+
+        :param data: the DAG data to be encoded
+        :type data: :obj:`EncodableType`
+        :param stream: an optional stream into which the encoded data should be written
+        :type stream: :obj:`io.BufferedIOBase` or :obj:`None`, *optional*
+        :param include_multicodec: if :obj:`True`, the encoded data is prefixed by the multicodec code for ``'dag-cbor'``
+                                   (see `multicodec.wrap <https://multiformats.readthedocs.io/en/latest/api/multiformats.multicodec.html#wrap>`_).
+        :type include_multicodec: :obj:`bool`, *optional*
+
+        :raises ~dag_cbor.utils.CBOREncodingError: if an :obj:`int` outside of ``range(-2**64, 2**64)`` is encountered
+        :raises ~dag_cbor.utils.DAGCBOREncodingError: if a value of type other than :obj:`None`, :obj:`bool`, :obj:`int`, :obj:`float`, :obj:`str`,
+                                                      :obj:`bytes`, :obj:`list`, :obj:`dict`, or :class:`~multiformats.cid.CID` is encountered
+        :raises ~dag_cbor.utils.DAGCBOREncodingError: if attempting to encode the special :obj:`float` values ``NaN``, ``Infinity`` and ``-Infinity``
+        :raises ~dag_cbor.utils.DAGCBOREncodingError: if a key of a dictionary is not a string
 
     """
     validate(data, EncodableType)
@@ -174,10 +171,12 @@ def _encode_bytes(stream: BufferedIOBase, value: bytes) -> int:
     return num_head_bytes+len(value)
 
 def _encode_str(stream: BufferedIOBase, value: str) -> int:
-    try:
-        utf8_value: bytes = value.encode("utf-8", errors="strict")
-    except UnicodeError as e:
-        raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # try:
+    #     utf8_value: bytes = value.encode("utf-8", errors="strict")
+    # except UnicodeError as e:
+    #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
+    utf8_value: bytes = value.encode("utf-8", errors="strict")
     num_head_bytes = _encode_head(stream, 0x3, len(utf8_value))
     stream.write(utf8_value)
     return num_head_bytes+len(utf8_value)
@@ -190,14 +189,17 @@ def _encode_list(stream: BufferedIOBase, value: List[Any]) -> int:
 
 def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
     _check_key_compliance(value)
-    # sort keys canonically
-    try:
-        utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
-                             for k, v in value.items()]
-    except UnicodeError as e:
-        raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # try:
+    #     utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
+    #                          for k, v in value.items()]
+    # except UnicodeError as e:
+    #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
+    # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
+    utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
+                         for k, v in value.items()]
+    # 1. sort keys canonically:
     sorted_utf8key_val_pairs = sorted(utf8key_val_pairs, key=lambda i: i[0])
-    # encode key-value pairs (keys already utf-8 encoded)
+    # 2. encode key-value pairs (keys already utf-8 encoded):
     num_bytes_written = _encode_head(stream, 0x5, len(value))
     for utf8k, v in sorted_utf8key_val_pairs:
         num_bytes_written += _encode_head(stream, 0x3, len(utf8k))

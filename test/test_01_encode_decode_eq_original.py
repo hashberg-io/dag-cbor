@@ -19,6 +19,20 @@ def test_int() -> None:
         assert x == decode(encode(x)), error_msg
         assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
+def test_special_int() -> None:
+    """
+        Encodes specially crafted `int` samples with `dag_cbor.encoding.encode`,
+        encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
+    """
+    exponents = [8, 16, 32, 26]
+    special_data = [2**e for e in exponents]
+    special_data += [x-1 for x in special_data]
+    special_data += [-x for x in special_data]
+    for i, x in enumerate(special_data):
+        error_msg = f"failed at #{i} = {repr(x)}"
+        assert x == decode(encode(x)), error_msg
+        assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
+
 def test_bytes() -> None:
     """
         Encodes random `bytes` samples with `dag_cbor.encoding.encode`,

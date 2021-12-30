@@ -1,0 +1,13 @@
+{
+    "pkg_name": "dag_cbor",
+    "pkg_path": "..",
+    "apidocs_folder": "api",
+    "toc_filename": "api-toc.rst",
+    "include_members": {
+        "dag_cbor.encoding": ["FlatEncodableType", "EncodableType"],
+        "dag_cbor.decoding": ["DecodeCallback"]
+    },
+    "exclude_members": {},
+    "include_modules": [],
+    "exclude_modules": []
+}

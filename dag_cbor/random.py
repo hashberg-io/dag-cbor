@@ -1,76 +1,5 @@
 """
     Functions to generate random data.
-
-    The functions are named `rand_X`, where `X` is one of:
-
-    - `int` for uniformly distributed integers
-    - `float` for uniformly distributed floats, with fixed decimals
-    - `bytes` for byte-strings of uniformly distributed length, with uniformly distributed bytes
-    - `str` for strings of uniformly distributed length, with uniformly distributed codepoints (all valid UTF-8 strings, by rejection sampling)
-    - `bool` for `False` or `True` (50% each)
-    - `bool_none` for `False`, `True` or `None` (33.3% each)
-    - `list` for lists of uniformly distributed length, with random elements of any type
-    - `dict` for dictionaries of uniformly distributed length, with distinct random string keys and random values of any type
-    - `cid` for CID data (instance of `CID` from the [`multiformats`](https://github.com/hashberg-io/multiformats) library)
-
-    The function call `rand_X(n)` returns an iterator yielding a stream of `n` random values of type `X`, e.g.:
-
-    ```python
-        >>> import pprint
-        >>> import dag_cbor
-        >>> kwargs = dict(min_codepoint=0x41, max_codepoint=0x5a, include_cid=False)
-        >>> with dag_cbor.random.options(**kwargs):
-        ...     for d in dag_cbor.random.rand_dict(3):
-        ...             pprint.pp(d)
-        ...
-        {'BIQPMZ': b'\\x85\\x1f\\x07/\\xcc\\x00\\xfc\\xaa',
-         'EJEYDTZI': {},
-         'PLSG': {'G': 'JFG',
-                  'HZE': -61.278,
-                  'JWDRKRGZ': b'-',
-                  'OCCKQPDJ': True,
-                  'SJOCTZMK': False},
-         'PRDLN': 39.129,
-         'TUGRP': None,
-         'WZTEJDXC': -69.933}
-        {'GHAXI': 39.12,
-         'PVUWZLC': 4.523,
-         'TDPSU': 'TVCADUGT',
-         'ZHGVSNSI': [-57, 9, -78.312]}
-        {'': 11, 'B': True, 'FWD': {}, 'GXZBVAR': 'BTDWMGI', 'TDICHC': 87}
-    ```
-
-    The function call `rand_X()`, without the positional argument `n`, instead yields an infinite stream of random values.
-
-    The `options()` context manager is used to set options temporarily, within the scope of a `with` directive:
-    in the example above, we set string characters to be uppercase alphabetic (codepoints `0x41`-`0x5a`) and we excluded CID
-    values from being generated (for additional clarity in the example).
-    Options can be set with `set_options()` and reset with `reset_options()`. A read-only view on options can be obtained
-    from `get_options()`, and a read-only view on default options can be obtained from `default_options()`:
-
-    ```py
-        >>> import pprint
-        >>> import dag_cbor
-        >>> pprint.pp(dag_cbor.random.default_options())
-        mappingproxy({'min_int': -100,
-                      'max_int': 100,
-                      'min_bytes': 0,
-                      'max_bytes': 8,
-                      'min_chars': 0,
-                      'max_chars': 8,
-                      'min_codepoint': 33,
-                      'max_codepoint': 126,
-                      'min_len': 0,
-                      'max_len': 8,
-                      'max_nesting': 2,
-                      'canonical': True,
-                      'min_float': -100.0,
-                      'max_float': 100.0,
-                      'float_decimals': 3,
-                      'include_cid': True})
-    ```
-
-    See `set_options` for a description of the options.
 """
 # pylint: disable = global-statement
 
@@ -160,13 +89,33 @@ def options(*,
     """
         Returns with-statement context manager for temporary option setting:
 
-        ```py
+        .. code-block:: python
+
             with options(**options):
                 for value in rand_data(num_samples):
                     ...
-        ```
 
-        See `set_options` for a description of the options.
+        Options available:
+
+        .. code-block::
+
+            seed: int           # set new random number generator, with this seed
+            min_int: int        # smallest `int` value
+            max_int: int        # largest `int` value
+            min_bytes: int      # min length of `bytes` value
+            max_bytes: int      # max length of `bytes` value
+            min_chars: int      # min length of `str` value
+            max_chars: int      # max length of `str` value
+            min_codepoint: int  # min utf-8 codepoint in `str` value
+            max_codepoint: int  # max utf-8 codepoint in `str` value
+            min_len: int        # min length of `list` and `dict` values
+            max_len: int        # max length of `list` and `dict` values
+            max_nesting: int    # max nesting of collections
+            canonical: bool     # whether `dict` values have canonically ordered keys
+            min_float: float    # smallest `float` value
+            max_float: float    # largest `float` value
+            float_decimals: int # number of decimals to keep in floats
+            include_cid: bool   # whether to generate CID values
     """
     # pylint: disable = too-many-locals
     global _options
@@ -207,27 +156,7 @@ def set_options(*,
                 float_decimals: Optional[int] = None,
                 include_cid: Optional[bool] = None,) -> None:
     """
-        Permanently sets random generation options:
-
-        ```python
-            seed: int           # set new random number generator, with this seed
-            min_int: int        # smallest `int` value
-            max_int: int        # largest `int` value
-            min_bytes: int      # min length of `bytes` value
-            max_bytes: int      # max length of `bytes` value
-            min_chars: int      # min length of `str` value
-            max_chars: int      # max length of `str` value
-            min_codepoint: int  # min utf-8 codepoint in `str` value
-            max_codepoint: int  # max utf-8 codepoint in `str` value
-            min_len: int        # min length of `list` and `dict` values
-            max_len: int        # max length of `list` and `dict` values
-            max_nesting: int    # max nesting of collections
-            canonical: bool     # whether `dict` values have canonically ordered keys
-            min_float: float    # smallest `float` value
-            max_float: float    # largest `float` value
-            float_decimals: int # number of decimals to keep in floats
-            include_cid: bool   # whether to generate CID values
-        ```
+        Permanently sets random generation options. See :func:`options` for the available options.
 
     """
     # pylint: disable = too-many-branches, too-many-locals, too-many-statements
@@ -322,25 +251,21 @@ def set_options(*,
 
 
 def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[EncodableType]:
-    """
+    r"""
         Generates a stream of random data data.
-        If a number `n` is given, that number of samples is yelded.
 
-        Currently, [pdoc](https://pdoc3.github.io/pdoc/) does not properly document the signature of this function, which is as follows:
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param max_nesting: the maximum nesting level for containers; if :obj:`None`, value from :func:`get_options` is used
+        :type max_nesting: :obj:`int` or :obj:`None`, *optional*
 
-        ```py
-            def rand_data(n: Optional[int] = None, *,
-                          max_nesting: Optional[int] = None) -> Iterator[EncodableType]:
-        ```
+        Maximum nesting level for containers:
 
-
-        The optional `max_nesting` keyword argument can be used to explicitly set the
-        maximum nesting level for containers:
-
-        - the value `None` (default) is replaced with the integer value `get_options()["max_nesting"]`
         - the integer value -1 means no containers will be generated
-        - integer values >= 0 mean that containers will be generated, with items generated by `random_data(max_nesting=max_nesting-1)`
+        - integer values >= 0 mean that containers will be generated, with items generated by ``random_data(max_nesting=max_nesting-1)``
         - no other values are valid
+
+        :rtype: :obj:`~typing.Iterator`\ [:obj:`~dag_cbor.encoding.EncodableType`]
     """
     validate(n, Optional[int])
     validate(max_nesting, Optional[int])
@@ -381,18 +306,14 @@ def _rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) ->
 
 def rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[List[Any]]:
     """
-        Generates a stream of random `list` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`list` data.
 
-        The optional `length` keyword argument can be used to fix a length for the lists generated.
-
-        The optional `max_nesting` keyword argument can be used to explicitly set the
-        maximum nesting level for containers:
-
-        - the value `None` (default) is replaced with the integer value `get_options()["max_nesting"]`
-        - the integer value 0 means no containers will be generated as items
-        - integer values > 0 mean that containers will be generated as items, with maximum nesting level `max_nesting-1`
-        - no other values are valid
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param length: size for the lists; if :obj:`None`, a random value is sampled according to the :func:`options`
+        :type length: :obj:`int` or :obj:`None`, *optional*
+        :param max_nesting: the maximum nesting level for containers; if :obj:`None`, value from :func:`get_options` is used
+        :type max_nesting: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     validate(length, Optional[int])
@@ -418,18 +339,14 @@ def _rand_list(n: Optional[int] = None, *, length: Optional[int] = None, max_nes
 
 def rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nesting: Optional[int] = None) -> Iterator[Dict[str, Any]]:
     """
-        Generates a stream of random `dict` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`dict` data.
 
-        The optional `length` keyword argument can be used to fix a length for the dictionaries generated.
-
-        The optional `max_nesting` keyword argument can be used to explicitly set the
-        maximum nesting level for containers:
-
-        - the value `None` (default) is replaced with the integer value `get_options()["max_nesting"]`
-        - the integer value 0 means no containers will be generated as values
-        - integer values > 0 mean that containers will be generated as values, with maximum nesting level `max_nesting-1`
-        - no other values are valid
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param length: size for the dicts; if :obj:`None`, a random value is sampled according to the :func:`options`
+        :type length: :obj:`int` or :obj:`None`, *optional*
+        :param max_nesting: the maximum nesting level for containers; if :obj:`None`, value from :func:`get_options` is used
+        :type max_nesting: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     validate(length, Optional[int])
@@ -489,8 +406,10 @@ def _rand_dict(n: Optional[int] = None, *, length: Optional[int] = None, max_nes
 
 def rand_int(n: Optional[int] = None) -> Iterator[int]:
     """
-        Generates a stream of random `int` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`int` data.
+
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     return _rand_int(n)
@@ -507,10 +426,12 @@ def _rand_int(n: Optional[int] = None) -> Iterator[int]:
 
 def rand_bytes(n: Optional[int] = None, *, length: Optional[int] = None) -> Iterator[bytes]:
     """
-        Generates a stream of random `bytes` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`bytes` data.
 
-        The optional `length` keyword argument can be used to fix the number of bytes generated.
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param length: length of the bytestrings; if :obj:`None`, a random value is sampled according to the :func:`options`
+        :type length: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     validate(length, Optional[int])
@@ -531,10 +452,12 @@ def _rand_bytes(n: Optional[int] = None, *, length: Optional[int] = None) -> Ite
 
 def rand_str(n: Optional[int] = None, *, length: Optional[int] = None) -> Iterator[str]:
     """
-        Generates a stream of random `str` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`str` data.
 
-        The optional `length` keyword argument can be used to fix the number of characters generated.
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param length: length of the strings; if :obj:`None`, a random value is sampled according to the :func:`options`
+        :type length: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     validate(length, Optional[int])
@@ -563,8 +486,10 @@ def _rand_str(n: Optional[int] = None, *, length: Optional[int] = None) -> Itera
 
 def rand_bool(n: Optional[int] = None) -> Iterator[bool]:
     """
-        Generates a stream of random `bool` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`bool` data.
+
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     return _rand_bool(n)
@@ -580,8 +505,10 @@ def _rand_bool(n: Optional[int] = None) -> Iterator[bool]:
 
 def rand_bool_none(n: Optional[int] = None) -> Iterator[Optional[bool]]:
     """
-        Generates a stream of random `Optional[bool]` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`bool` or :obj:`None` data.
+
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     return _rand_bool_none(n)
@@ -597,8 +524,10 @@ def _rand_bool_none(n: Optional[int] = None) -> Iterator[Optional[bool]]:
 
 def rand_float(n: Optional[int] = None) -> Iterator[float]:
     """
-        Generates a stream of random `float` data.
-        If a number `n` is given, that number of samples is yelded.
+        Generates a stream of random :obj:`float` data.
+
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     return _rand_float(n)
@@ -636,15 +565,20 @@ _cid_multicodec = multicodec.get("dag-cbor")
 _cid_multihash = multihash.get("sha3-512")
 
 def rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[EncodableType, CID]]:
-    """
-        Generates a stream of random dag-cbor data and associated CIDs:
+    r"""
+        Generates a stream of random DAG-CBOR data and associated CIDs:
 
         - multibase 'base32'
         - CIDv1
         - multicodec 'dag-cbor'
         - multihash 'sha3-512', with full 512-bit digest
 
-        If a number `n` is given, that number of samples is yelded.
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param max_nesting: the maximum nesting level for containers; if :obj:`None`, value from :func:`get_options` is used
+        :type max_nesting: :obj:`int` or :obj:`None`, *optional*
+
+        :rtype: :obj:`~typing.Iterator`\ [:obj:`~typing.Tuple`\ [:obj:`~dag_cbor.encoding.EncodableType`, :obj:`~multiformats.cid.CID`]]
     """
     validate(n, Optional[int])
     return _rand_data_cid(n, max_nesting=max_nesting)
@@ -658,7 +592,10 @@ def rand_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> I
         - multicodec 'dag-cbor'
         - multihash 'sha3-512', with full 512-bit digest
 
-        If a number `n` is given, that number of samples is yelded.
+        :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
+        :type n: :obj:`int` or :obj:`None`, *optional*
+        :param max_nesting: the maximum nesting level for containers; if :obj:`None`, value from :func:`get_options` is used
+        :type max_nesting: :obj:`int` or :obj:`None`, *optional*
     """
     validate(n, Optional[int])
     return _rand_cid(n, max_nesting=max_nesting)
