@@ -210,7 +210,7 @@ def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
 
 def _encode_cid(stream: BufferedIOBase, value: CID) -> int:
     num_bytes_written = _encode_head(stream, 0x6, 42)
-    num_bytes_written += _encode_bytes(stream, bytes(value))
+    num_bytes_written += _encode_bytes(stream, b"\0" + bytes(value))
     return num_bytes_written
 
 def _encode_bool(stream: BufferedIOBase, value: bool) -> int:
