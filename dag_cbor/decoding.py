@@ -273,7 +273,9 @@ def _decode_cid(stream: BufferedIOBase, arg: int) -> Tuple[CID, int]:
         raise CBORDecodingError("Error while decoding CID bytes.") from e
     if not isinstance(cid_bytes, bytes):
         raise DAGCBORDecodingError(f"Expected CID bytes, found data of type {type(cid_bytes)} instead.")
-    return (CID.decode(cid_bytes), num_bytes_read)
+    if not cid_bytes[0] == 0:
+        raise DAGCBORDecodingError(f"CID does not start with the identity Multibase prefix (0x00).")
+    return (CID.decode(cid_bytes[1:]), num_bytes_read)
 
 def _decode_bool_none(stream: BufferedIOBase, arg: int) -> Tuple[Optional[bool], int]:
     if arg == 20:

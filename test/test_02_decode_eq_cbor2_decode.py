@@ -116,4 +116,4 @@ def test_cid() -> None:
         encoded_data = encode(x)
         decoded_data = decode(encoded_data)
         assert isinstance(decoded_data, CID)
-        assert cbor2.CBORTag(42, bytes(decoded_data)) == cbor2.loads(encoded_data), error_msg
+        assert cbor2.CBORTag(42, b"\0" + bytes(decoded_data)) == cbor2.loads(encoded_data), error_msg
