@@ -59,7 +59,7 @@ def _canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
     #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
     # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
     utf8key_key_val_pairs = [(k.encode("utf-8", errors="strict"), k, v) for k, v in value.items()]
-    sorted_utf8key_key_val_pairs = sorted(utf8key_key_val_pairs, key=lambda i: i[0])
+    sorted_utf8key_key_val_pairs = sorted(utf8key_key_val_pairs, key=lambda i: (len(i[0]), i[0]))
     return {k: v for _, k, v in sorted_utf8key_key_val_pairs}
 
 

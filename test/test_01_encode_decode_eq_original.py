@@ -6,6 +6,8 @@
 from dag_cbor import encode, decode
 from dag_cbor.random import rand_list, rand_dict, rand_int, rand_bytes, rand_str, rand_bool_none, rand_float, rand_cid, options
 
+import pytest
+
 nsamples = 1000
 
 def test_int() -> None:
@@ -89,12 +91,13 @@ def test_list() -> None:
         assert x == decode(encode(x)), error_msg
         assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
-def test_dict() -> None:
+@pytest.mark.parametrize("canonical", [True, False])
+def test_dict(canonical) -> None:
     """
         Encodes random `dict` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.
     """
-    with options(include_cid=False):
+    with options(include_cid=False, canonical=canonical):
         test_data = rand_dict(nsamples)
     for i, x in enumerate(test_data):
         error_msg = f"failed at #{i} = {repr(x)}"

@@ -257,7 +257,7 @@ def _decode_dict(stream: BufferedIOBase, length: int,
         raise DAGCBORDecodingError(f"Found only {len(d)} unique keys out of {length} key-value pairs.")
     # check that keys are sorted canonically
     assert len(key_bytes_list) == length
-    sorted_key_bytes_list = sorted(key_bytes_list)
+    sorted_key_bytes_list = sorted(key_bytes_list, key=lambda e: (len(e), e))
     for idx, (k1, k2) in enumerate(zip(key_bytes_list, sorted_key_bytes_list)):
         if k1 != k2:
             exp_idx = sorted_key_bytes_list.index(k1)
