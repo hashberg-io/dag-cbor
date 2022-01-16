@@ -3,7 +3,7 @@
 """
 # pylint: disable = global-statement
 
-import cbor2.encoder as cbor2 # type: ignore
+import cbor2 # type: ignore
 
 from dag_cbor import encode
 from dag_cbor.random import rand_list, rand_dict, rand_int, rand_bytes, rand_str, rand_bool_none, rand_float, rand_cid, options
@@ -94,6 +94,19 @@ def test_dict() -> None:
         for i, x in enumerate(test_data):
             error_msg = f"failed at #{i} = {repr(x)}"
             assert cbor2.dumps(x) == encode(x), error_msg
+
+
+def test_dict_noncanonical() -> None:
+    """
+        Encodes a dict given in noncanonical order and tests if it is encoded in canonical order.
+        from the specs (https://ipld.io/specs/codecs/dag-cbor/spec/#strictness):
+
+        If two keys have different lengths, the shorter one sorts earlier;
+        If two keys have the same length, the one with the lower value in (byte-wise) lexical order sorts earlier.
+    """
+    test_data = {"bar123": 5, "zap": 7, "abc432": 9}
+    assert list(cbor2.loads(encode(test_data))) == ["zap", "abc432", "bar123"]
+
 
 def test_cid() -> None:
     """

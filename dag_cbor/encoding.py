@@ -198,7 +198,7 @@ def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
     utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
                          for k, v in value.items()]
     # 1. sort keys canonically:
-    sorted_utf8key_val_pairs = sorted(utf8key_val_pairs, key=lambda i: i[0])
+    sorted_utf8key_val_pairs = sorted(utf8key_val_pairs, key=lambda i: (len(i[0]), i[0]))
     # 2. encode key-value pairs (keys already utf-8 encoded):
     num_bytes_written = _encode_head(stream, 0x5, len(value))
     for utf8k, v in sorted_utf8key_val_pairs:
