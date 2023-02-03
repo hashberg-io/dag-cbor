@@ -2,7 +2,7 @@ r"""
     Utility functions used to produce messages for DAG-CBOR decoding errors.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from ..utils import CBORDecodingError
 from ._stream import StreamSnapshot
@@ -90,7 +90,7 @@ def _extract_error_cause_lines(e: CBORDecodingError) -> List[str]:
     return [(r"\ " if idx == 0 else "  ")+line for idx, line in enumerate(lines)]
 
 
-def _cid_error_template(cid_head_snapshots: tuple[StreamSnapshot, StreamSnapshot], *explanation: str) -> str:
+def _cid_error_template(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], *explanation: str) -> str:
     lines = [
         "Error while decoding CID.",
         *_decode_error_lines(*cid_head_snapshots, details="CID tag", dots=True),

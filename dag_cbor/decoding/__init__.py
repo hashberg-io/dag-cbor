@@ -279,7 +279,7 @@ def _decode_bool_none(stream: Stream, arg: int, callback: Optional[DecodeCallbac
 def _decode_dummy(stream: Stream, arg: int, callback: Optional[DecodeCallback]) -> Tuple[None, int]:
     assert False, f"Major type {arg} does not have an associated decoder."
 
-_decoders: tuple[Callable[[Stream, int, Optional[DecodeCallback]], tuple[EncodableType, int]], ...] = (
+_decoders: Tuple[Callable[[Stream, int, Optional[DecodeCallback]], Tuple[EncodableType, int]], ...] = (
     _decode_dummy,
     _decode_dummy,
     _decode_bytes,

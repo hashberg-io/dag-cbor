@@ -3,6 +3,7 @@ r"""
 """
 
 import math
+from typing import Tuple
 from typing_extensions import Literal
 
 from multiformats import varint
@@ -130,10 +131,10 @@ def _invalid_tag(stream: Stream, arg: int) -> str:
     hl_start = prev_snapshot.latest_read_size
     return _decode_error_msg(msg, prev_snapshot, curr_snapshot, details=details, hl_start=hl_start)
 
-def _cid(cid_head_snapshots: tuple[StreamSnapshot, StreamSnapshot], e: CBORDecodingError) -> str:
+def _cid(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], e: CBORDecodingError) -> str:
     return _cid_error_template(cid_head_snapshots, *_extract_error_cause_lines(e))
 
-def _cid_bytes(cid_head_snapshots: tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: EncodableType) -> str:
+def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: EncodableType) -> str:
     decoded_type = type(cid_bytes).__name__
     decoded_type_details = f"decodes to an item of type {repr(decoded_type)}"
     explanation = [
@@ -142,7 +143,7 @@ def _cid_bytes(cid_head_snapshots: tuple[StreamSnapshot, StreamSnapshot], stream
     ]
     return _cid_error_template(cid_head_snapshots, *explanation)
 
-def _cid_multibase(cid_head_snapshots: tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: bytes) -> str:
+def _cid_multibase(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: bytes) -> str:
     error_details = "byte should be 0x00"
     explanation = [
         "CID does not start with the identity Multibase prefix.",

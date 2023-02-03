@@ -120,9 +120,9 @@ def options(*,
     # pylint: disable = too-many-locals
     global _options
     global _rand
+    _old_options = _options
+    _old_rand = _rand
     try:
-        _old_options = _options
-        _old_rand = _rand
         set_options(seed=seed,
                     min_int=min_int, max_int=max_int,
                     min_bytes=min_bytes, max_bytes=max_bytes,
