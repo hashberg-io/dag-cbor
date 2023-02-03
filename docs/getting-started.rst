@@ -51,8 +51,7 @@ The `DAG-CBOR codec <https://ipld.io/specs/codecs/dag-cbor/spec/>`_ is a restric
 - Integers (major types 0 and 1) must be encoded using the minimum possible number of bytes.
 - Lengths for major types 2, 3, 4 and 5 must be encoded in the data item head using the minimum possible number of bytes.
 - Map keys must be strings (major type 3) and must be unique.
-- Map keys must be sorted ascendingly according to the lexicographic ordering of their utf-8 encoded bytes (which is
-  the standard ordering of :obj:`bytes` objects in Python).
+- Map keys must be sorted ascendingly, first by increasing length and then by lexicographic ordering of their utf-8 encoded bytes (cf. `strictness <https://ipld.io/specs/codecs/dag-cbor/spec/#strictness>`_).
 - Indefinite-length items (bytes, strings, lists or maps) are not allowed.
 - The "break" token is not allowed.
 - The only major type 7 items allowed are 64-bit floats (minor 27) and the simple values `true` (minor 20),
