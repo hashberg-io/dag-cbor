@@ -252,7 +252,7 @@ def set_options(*,
 
 def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[EncodableType]:
     r"""
-        Generates a stream of random data data.
+        Generates a stream of random data.
 
         :param n: the number of samples to be yielded; if :obj:`None`, an infinite stream is yielded
         :type n: :obj:`int` or :obj:`None`, *optional*

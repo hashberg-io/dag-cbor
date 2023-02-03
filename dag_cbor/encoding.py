@@ -171,11 +171,6 @@ def _encode_bytes(stream: BufferedIOBase, value: bytes) -> int:
     return num_head_bytes+len(value)
 
 def _encode_str(stream: BufferedIOBase, value: str) -> int:
-    # try:
-    #     utf8_value: bytes = value.encode("utf-8", errors="strict")
-    # except UnicodeError as e:
-    #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
-    # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
     utf8_value: bytes = value.encode("utf-8", errors="strict")
     num_head_bytes = _encode_head(stream, 0x3, len(utf8_value))
     stream.write(utf8_value)
@@ -189,12 +184,6 @@ def _encode_list(stream: BufferedIOBase, value: List[Any]) -> int:
 
 def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any]) -> int:
     _check_key_compliance(value)
-    # try:
-    #     utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
-    #                          for k, v in value.items()]
-    # except UnicodeError as e:
-    #     raise CBOREncodingError("Strings must be valid utf-8 strings.") from e
-    # # as far as I understand, the above should never raise UnicodeError on "utf-8" encoding
     utf8key_val_pairs = [(k.encode("utf-8", errors="strict"), v)
                          for k, v in value.items()]
     # 1. sort keys canonically:

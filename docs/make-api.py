@@ -172,6 +172,8 @@ Set "toc_filename" to null to avoid generating a table of contents file.
     ]
     print(f"Writing TOC for API docfiles at {toc_filename}")
     for mod_name in modules_dict:
+        if mod_name in exclude_modules:
+            continue
         line = f"    {apidocs_folder}/{mod_name}"
         toctable_lines.append(line)
         print(line)

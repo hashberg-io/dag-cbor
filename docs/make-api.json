@@ -9,5 +9,9 @@
     },
     "exclude_members": {},
     "include_modules": [],
-    "exclude_modules": []
+    "exclude_modules": [
+        "dag_cbor.decoding._err",
+        "dag_cbor.decoding._err_utils",
+        "dag_cbor.decoding._stream"
+    ]
 }

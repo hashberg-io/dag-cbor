@@ -92,7 +92,7 @@ def test_list() -> None:
         assert x == decode(encode(x, include_multicodec=True), require_multicodec=True), error_msg
 
 @pytest.mark.parametrize("canonical", [True, False])
-def test_dict(canonical) -> None:
+def test_dict(canonical: bool) -> None:
     """
         Encodes random `dict` samples with `dag_cbor.encoding.encode`,
         encodes them with `cbor2.encoder.dumps` and checks that the two encodings match.

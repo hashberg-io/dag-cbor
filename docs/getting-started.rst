@@ -30,6 +30,15 @@ b'\xa2aa\x0cabfhello!'
 The :mod:`~dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
 The :mod:`~dag_cbor.utils` module contains errors and utility functions.
 
+Please note that :mod:`dag_cbor` internally imports `multiformats <https://github.com/hashberg-io/multiformats>`_: if you'd like to initialise multiformats
+with a custom selection of multicodecs/multihashes, you should call ``multiformats_config.enable()`` **before** you import :mod:`dag_cbor` (see the `multiformats docs <https://multiformats.readthedocs.io/en/latest/getting-started.html>`_ for further details):
+
+.. code-block:: python
+
+    import multiformats_config
+    multiformats_config.enable(codecs=["sha1", 0x29], bases=["base64url", "9"])
+    import dag_cbor # internally imports multiformats
+
 
 The DAG-CBOR codec
 ------------------
