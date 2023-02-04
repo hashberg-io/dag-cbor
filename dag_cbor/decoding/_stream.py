@@ -5,7 +5,7 @@ from io import BufferedIOBase, BytesIO
 from typing import Optional
 
 class StreamSnapshot:
-    r""" A snapshot of the current state of a stream. """
+    r""" A snapshot of the current state of a byte-stream being decoded. """
 
     _bs: bytes
     _pos: int
@@ -33,8 +33,9 @@ class StreamSnapshot:
 
     @property
     def num_bytes_read(self) -> int:
-        r""" Total number of bytes read so far in the stream. """
+        r""" Total number of bytes read so far from the stream. """
         return self._pos
+
 
 class Stream:
     r"""
@@ -73,6 +74,7 @@ class Stream:
             Read the given number of bytes from the stream. If :obj:`None`, reads all remaining bytes.
             If ``extend`` is set to :obj:`True`, the current stream snapshot (see :attr:`Stream.curr_snapshot`) is extended with the bytes just read,
             and the previous stream snapshot (see :attr:`Stream.prev_snapshot`) is kept.
+            Otherwise, the previous snapshot is replaced with the current snaptshot, and a new current snapshot is created with the bytes just read.
         """
         bs = self._buf.read(num_bytes)
         if extend:

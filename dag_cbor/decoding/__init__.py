@@ -134,7 +134,7 @@ def _decode_head(stream: Stream) -> Tuple[int, Union[int, float], int]:
     # read leading byte
     res = stream.read(1)
     if len(res) < 1:
-        raise CBORDecodingError(err._unexpected_eof(stream, what="leading byte of data item head", n=1, include_prev_snapshot=False))
+        raise CBORDecodingError(err._unexpected_eof(stream, "leading byte of data item head", 1, include_prev_snapshot=False))
     leading_byte = res[0]
     major_type = leading_byte >> 5
     additional_info = leading_byte & 0b11111
@@ -147,7 +147,7 @@ def _decode_head(stream: Stream) -> Tuple[int, Union[int, float], int]:
     argument_nbytes = 1<<(additional_info-24)
     res = stream.read(argument_nbytes)
     if len(res) < argument_nbytes:
-        raise CBORDecodingError(err._unexpected_eof(stream, what=f"{argument_nbytes} byte argument of data item head", n=argument_nbytes))
+        raise CBORDecodingError(err._unexpected_eof(stream, f"{argument_nbytes} byte argument of data item head", argument_nbytes))
     if additional_info == 24:
         # 1 byte of unsigned int argument value to follow
         return (major_type, res[0], 2)
@@ -182,13 +182,13 @@ def _decode_head(stream: Stream) -> Tuple[int, Union[int, float], int]:
 def _decode_bytes(stream: Stream, length: int, callback: Optional[DecodeCallback]) -> Tuple[bytes, int]:
     res = stream.read(length)
     if len(res) < length:
-        raise CBORDecodingError(err._unexpected_eof(stream, what=f"{length} bytes of bytestring", n=length))
+        raise CBORDecodingError(err._unexpected_eof(stream, f"{length} bytes of bytestring", length))
     return (res, length)
 
 def _decode_str(stream: Stream, length: int, callback: Optional[DecodeCallback]) -> Tuple[str, int]:
     res = stream.read(length)
     if len(res) < length:
-        raise CBORDecodingError(err._unexpected_eof(stream, what=f"{length} bytes of string", n=length))
+        raise CBORDecodingError(err._unexpected_eof(stream, f"{length} bytes of string", length))
     try:
         s = res.decode(encoding="utf-8", errors="strict")
     except UnicodeDecodeError as e:

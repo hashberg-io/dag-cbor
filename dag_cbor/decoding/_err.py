@@ -1,5 +1,5 @@
 r"""
-    Messages for DAG-CBOR decoding errors.
+    Detailed messages for all possible DAG-CBOR decoding errors.
 """
 
 import math
@@ -11,7 +11,7 @@ from multiformats import varint
 from ..encoding import EncodableType, _dag_cbor_code
 from ..utils import CBORDecodingError
 from ._stream import Stream, StreamSnapshot
-from ._err_utils import _TRUNC_BYTES, _bytes2hex, _decode_error_lines, _decode_error_msg, _extract_error_cause_lines, _cid_error_template
+from ._err_utils import _bytes2hex, _decode_error_msg_lines, _decode_error_msg, _extract_error_cause_lines, _cid_error_template
 
 def _required_multicodec(stream: Stream) -> str:
     curr_snapshot = stream.curr_snapshot
@@ -45,7 +45,7 @@ def _unexpected_eof(stream: Stream, what: str, n: int, include_prev_snapshot: bo
     hl_start = prev_snapshot.latest_read_size
     details = f"{bytes_read} bytes read, out of {n} expected."
     snapshots = [prev_snapshot, curr_snapshot] if include_prev_snapshot else [curr_snapshot]
-    return _decode_error_msg(msg, *snapshots, details=details, eof=True, hl_start=hl_start)
+    return _decode_error_msg(msg, *snapshots, details=details, hl_start=hl_start)
 
 def _invalid_additional_info(stream: Stream, additional_info: int, major_type: int) -> str:
     msg = f"Invalid additional info {additional_info} in data item head for major type 0x{major_type:x}."
@@ -66,21 +66,16 @@ def _unicode(stream: Stream, length: int, start: int, end: int, reason: str) -> 
     curr_snapshot = stream.curr_snapshot
     msg = "String bytes are not valid utf-8 bytes."
     lines = [msg]
-    n = curr_snapshot.latest_read_size
-    ps = 0
-    pe = 0
-    if n <= _TRUNC_BYTES:
-        ps = start
-        pe = n-end
     str_details = f"string of length {length}"
-    lines.extend(_decode_error_lines(prev_snapshot, curr_snapshot, details=str_details, hl_len=1))
-    lines.extend(_decode_error_lines(curr_snapshot, details=reason, start=start, end=end, pad_start=ps+prev_snapshot.latest_read_size, pad_end=pe))
+    lines.extend(_decode_error_msg_lines(prev_snapshot, curr_snapshot, details=str_details, hl_len=1))
+    lines.extend(_decode_error_msg_lines(curr_snapshot, details=reason, start=start, end=end, pad_start=start+prev_snapshot.latest_read_size))
     return "\n".join(lines)
 
 def _list_item(list_head_snapshot: StreamSnapshot, idx: int, length: int, e: CBORDecodingError) -> str:
+    msg = "Error while decoding list."
     lines = [
-        "Error while decoding list.",
-        *_decode_error_lines(list_head_snapshot, details=f"list of length {length}", dots=True),
+        msg,
+        *_decode_error_msg_lines(list_head_snapshot, details=f"list of length {length}", dots=True),
         f"Error occurred while decoding item at position {idx}: further details below.",
         *_extract_error_cause_lines(e)
     ]
@@ -92,31 +87,38 @@ def _dict_key_type(stream: Stream, major_type: int) -> str:
     return _decode_error_msg(msg, stream.curr_snapshot, details=details, hl_len=1, dots=True)
 
 def _dict_item(dict_head_snapshot: StreamSnapshot, item: Literal["key", "value"], idx: int, length: int, e: CBORDecodingError) -> str:
+    msg = "Error while decoding dict."
+    details = f"dict of length {length}"
     lines = [
-        "Error while decoding dict.",
-        *_decode_error_lines(dict_head_snapshot, details=f"dict of length {length}", dots=True),
+        msg,
+        *_decode_error_msg_lines(dict_head_snapshot, details=details, dots=True),
         f"Error occurred while decoding {item} at position {idx}: further details below.",
         *_extract_error_cause_lines(e)
     ]
     return "\n".join(lines)
 
 def _duplicate_dict_key(dict_head_snapshot: StreamSnapshot, stream: Stream, k: str, idx: int, length: int) -> str:
+    msg = "Error while decoding dict."
+    dict_details = f"dict of length {length}"
+    key_details = f"decodes to key {repr(k)}"
     lines = [
-        "Error while decoding dict.",
-        *_decode_error_lines(dict_head_snapshot, details=f"dict of length {length}", dots=True),
+        msg,
+        *_decode_error_msg_lines(dict_head_snapshot, details=dict_details, dots=True),
         f"Duplicate key is found at position {idx}.",
-        *_decode_error_lines(stream.curr_snapshot, details=f"decodes to key {repr(k)}")
+        *_decode_error_msg_lines(stream.curr_snapshot, details=key_details)
     ]
     return "\n".join(lines)
 
 def _dict_key_order(dict_head_snapshot: StreamSnapshot, kb0: bytes, idx0: int, kb1: bytes, idx1: int, length: int) -> str:
     # pylint: disable = too-many-arguments
+    msg = "Error while decoding dict."
     pad_len = max(len(str(idx0)), len(str(idx1)))
     idx0_str = f"{idx0: >{pad_len}}"
     idx1_str = f"{idx1: >{pad_len}}"
+    details = f"dict of length {length}"
     lines = [
-        "Error while decoding dict.",
-        *_decode_error_lines(dict_head_snapshot, details=f"dict of length {length}", dots=True),
+        msg,
+        *_decode_error_msg_lines(dict_head_snapshot, details=details, dots=True),
         "Dictionary keys not in canonical order.",
         f"  Key at pos #{idx0_str}: {_bytes2hex(kb0)}",
         f"  Key at pos #{idx1_str}: {_bytes2hex(kb1)}",
@@ -136,18 +138,18 @@ def _cid(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], e: CBORDecod
 
 def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: EncodableType) -> str:
     decoded_type = type(cid_bytes).__name__
-    decoded_type_details = f"decodes to an item of type {repr(decoded_type)}"
+    details = f"decodes to an item of type {repr(decoded_type)}"
     explanation = [
         "CID bytes did not decode to an item of type 'bytes'.",
-        *_decode_error_lines(stream.curr_snapshot, details=decoded_type_details),
+        *_decode_error_msg_lines(stream.curr_snapshot, details=details),
     ]
     return _cid_error_template(cid_head_snapshots, *explanation)
 
 def _cid_multibase(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: bytes) -> str:
-    error_details = "byte should be 0x00"
+    details = "byte should be 0x00"
     explanation = [
         "CID does not start with the identity Multibase prefix.",
-        *_decode_error_lines(stream.prev_snapshot, stream.curr_snapshot, details=error_details, hl_start=1, hl_len=1),
+        *_decode_error_msg_lines(stream.prev_snapshot, stream.curr_snapshot, details=details, hl_start=1, hl_len=1),
     ]
     return _cid_error_template(cid_head_snapshots, *explanation)
 
