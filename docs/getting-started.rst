@@ -30,15 +30,6 @@ b'\xa2aa\x0cabfhello!'
 The :mod:`~dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
 The :mod:`~dag_cbor.utils` module contains errors and utility functions.
 
-Please note that :mod:`dag_cbor` internally imports `multiformats <https://github.com/hashberg-io/multiformats>`_: if you'd like to initialise multiformats
-with a custom selection of multicodecs/multihashes, you should call ``multiformats_config.enable()`` **before** you import :mod:`dag_cbor` (see the `multiformats docs <https://multiformats.readthedocs.io/en/latest/getting-started.html>`_ for further details):
-
-.. code-block:: python
-
-    import multiformats_config
-    multiformats_config.enable(codecs=["sha1", 0x29], bases=["base64url", "9"])
-    import dag_cbor # internally imports multiformats
-
 
 The DAG-CBOR codec
 ------------------
@@ -61,3 +52,16 @@ The `DAG-CBOR codec <https://ipld.io/specs/codecs/dag-cbor/spec/>`_ is a restric
   are not allowed.
 
 Because the CBOR codec can encode/decode all data handled by the DAG-CBOR codec, we use an established CBOR implementation as the reference when testing, namely the `cbor2 <https://github.com/agronholm/cbor2>`_ package (with the exception of CID data, which is not natively handled by cbor2).
+
+
+Multiformats Config
+-------------------
+
+Please note that :mod:`dag_cbor` internally imports `multiformats <https://github.com/hashberg-io/multiformats>`_: if you'd like to initialise multiformats
+with a custom selection of multicodecs/multihashes, you should call ``multiformats_config.enable()`` **before** you import :mod:`dag_cbor` (see the `multiformats docs <https://multiformats.readthedocs.io/en/latest/getting-started.html>`_ for further details):
+
+.. code-block:: python
+
+    import multiformats_config
+    multiformats_config.enable(codecs=["sha1", 0x29], bases=["base64url", "9"])
+    import dag_cbor # internally imports multiformats

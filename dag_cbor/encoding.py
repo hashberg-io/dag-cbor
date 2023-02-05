@@ -2,11 +2,13 @@
     Encoding functions for DAG-CBOR codec.
 """
 
+from __future__ import annotations # See https://peps.python.org/pep-0563/
+
 from io import BufferedIOBase, BytesIO
 import math
 import struct
 from typing import Any, Dict, List, Optional, overload, Union
-from typing_validation import validate
+from typing_validation import validate, validation_aliases
 
 from multiformats import varint, multicodec, CID
 
@@ -17,12 +19,9 @@ FlatEncodableType = Union[None, bool, int, float, bytes, str, CID]
     Union of non-container Python types that can be encoded by this implementation of the DAG-CBOR codec.
 """
 
-EncodableType = Union[FlatEncodableType, List[Any], Dict[str, Any]]
+EncodableType = Union[FlatEncodableType, List["EncodableType"], Dict[str, "EncodableType"]]
 """
-    Union of Python types that can be encoded (at top level) by this implementation of the DAG-CBOR codec.
-
-    Because of limited support for recursive types (see `Mypy issue #731 <https://github.com/python/mypy/issues/731>`_),
-    the list items and dictionary values are not recursively typechecked.
+    Union of Python types that can be encoded by this implementation of the DAG-CBOR codec.
 """
 
 _dag_cbor_multicodec = multicodec.get("dag-cbor")
@@ -85,7 +84,8 @@ def encode(data: EncodableType, stream: Optional[BufferedIOBase] = None, *, incl
         :raises ~dag_cbor.utils.DAGCBOREncodingError: if a key of a dictionary is not a string
 
     """
-    validate(data, EncodableType)
+    with validation_aliases(EncodableType=EncodableType):
+        validate(data, EncodableType)
     validate(stream, Optional[BufferedIOBase])
     validate(include_multicodec, bool)
     if stream is None:

@@ -3,6 +3,7 @@
 """
 # pylint: disable = global-statement
 
+from __future__ import annotations # See https://peps.python.org/pep-0563/
 
 from contextlib import contextmanager
 import math

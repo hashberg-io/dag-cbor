@@ -13,6 +13,8 @@
       of the corresponding UTF-8 bytestrings (according to DAG-CBOR specification)
 """
 
+from __future__ import annotations # See https://peps.python.org/pep-0563/
+
 from typing import Any, Dict
 from typing_validation import validate
 
