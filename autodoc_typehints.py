@@ -9,7 +9,8 @@ from dataclasses import dataclass
 import inspect
 import re
 from types import FunctionType, ModuleType
-from typing import Any, Literal, Optional, Union
+from typing import Any, Optional, Union
+from typing_extensions import Literal
 from sphinx.application import Sphinx
 
 @dataclass(frozen=True)
