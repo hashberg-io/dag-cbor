@@ -7,8 +7,9 @@ from typing import List
 from multiformats import varint
 from dag_cbor.random import rand_data
 from dag_cbor import encode, decode
-from dag_cbor.encoding import EncodableType
-from dag_cbor.utils import CBOREncodingError, CBORDecodingError
+from dag_cbor.ipld import Kind
+from dag_cbor.encoding import CBOREncodingError
+from dag_cbor.decoding import CBORDecodingError
 
 import random
 
@@ -78,7 +79,7 @@ test_cases = [
     "71f3"
 ]
 
-def create_embedding_obj(tag: str) -> EncodableType:
+def create_embedding_obj(tag: str) -> Kind:
     for obj in rand_data(max_nesting=4):
         if not isinstance(obj, dict):
             continue

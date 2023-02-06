@@ -2,9 +2,11 @@ r"""
     Utility functions used to produce messages for DAG-CBOR decoding errors.
 """
 
+from __future__ import annotations # See https://peps.python.org/pep-0563/
+
 from typing import List, Optional, Tuple
 
-from ..utils import CBORDecodingError
+from .err import CBORDecodingError
 from ._stream import StreamSnapshot
 
 _TRUNC_BYTES = 16

@@ -3,15 +3,15 @@ dag_cbor.encoding
 
 .. automodule:: dag_cbor.encoding
 
-EncodableType
--------------
+canonical_order_dict
+--------------------
 
-.. autodata:: dag_cbor.encoding.EncodableType
+.. autofunction:: dag_cbor.encoding.canonical_order_dict
 
-FlatEncodableType
------------------
+check_key_compliance
+--------------------
 
-.. autodata:: dag_cbor.encoding.FlatEncodableType
+.. autofunction:: dag_cbor.encoding.check_key_compliance
 
 encode
 ------

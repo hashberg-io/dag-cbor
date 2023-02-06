@@ -27,8 +27,8 @@ b'\xa2aa\x0cabfhello!'
 >>> dag_cbor.decode(b'\xa2aa\x0cabfhello!')
 {'a': 12, 'b': 'hello!'}
 
+The :mod:`~dag_cbor.ipld` module contains utility types and functions pertaining to the `IPLD Data Model <https://ipld.io/docs/data-model/>`_.
 The :mod:`~dag_cbor.random` module contains functions to generate random data compatible with DAG-CBOR encoding.
-The :mod:`~dag_cbor.utils` module contains errors and utility functions.
 
 
 The DAG-CBOR codec
@@ -47,7 +47,7 @@ The `DAG-CBOR codec <https://ipld.io/specs/codecs/dag-cbor/spec/>`_ is a restric
 - The "break" token is not allowed.
 - The only major type 7 items allowed are 64-bit floats (minor 27) and the simple values `true` (minor 20),
   `false` (minor 21) and `null` (minor 22).
-- The special float values :obj:`NaN`, :obj:`Infinity` and :obj:`-Infinity` are not allowed.
+- The special float values ``NaN``, ``Infinity`` and ``-Infinity`` are not allowed.
 - Encoding and decoding is only allowed on a single top-level item: back-to-back concatenated items at the top level
   are not allowed.
 

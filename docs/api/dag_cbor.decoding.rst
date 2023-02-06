@@ -6,7 +6,9 @@ dag_cbor.decoding
 DecodeCallback
 --------------
 
-.. autodata:: dag_cbor.decoding.DecodeCallback
+.. autoclass:: dag_cbor.decoding.DecodeCallback
+    :show-inheritance:
+    :members:
 
 decode
 ------

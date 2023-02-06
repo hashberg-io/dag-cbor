@@ -7,7 +7,7 @@
 import cbor2
 
 from dag_cbor import encode, decode
-from dag_cbor.utils import DAGCBORDecodingError
+from dag_cbor.decoding.err import DAGCBORDecodingError
 from dag_cbor.random import rand_cid, options
 
 import pytest

@@ -2,14 +2,17 @@ r"""
     Detailed messages for all possible DAG-CBOR decoding errors.
 """
 
+from __future__ import annotations # See https://peps.python.org/pep-0563/
+
 import math
 from typing import Tuple
 from typing_extensions import Literal
 
 from multiformats import varint
 
-from ..encoding import EncodableType, _dag_cbor_code
-from ..utils import CBORDecodingError
+from ..ipld import Kind
+from ..encoding import _dag_cbor_code
+from .err import CBORDecodingError
 from ._stream import Stream, StreamSnapshot
 from ._err_utils import _bytes2hex, _decode_error_msg_lines, _decode_error_msg, _extract_error_cause_lines, _cid_error_template
 
@@ -136,7 +139,7 @@ def _invalid_tag(stream: Stream, arg: int) -> str:
 def _cid(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], e: CBORDecodingError) -> str:
     return _cid_error_template(cid_head_snapshots, *_extract_error_cause_lines(e))
 
-def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: EncodableType) -> str:
+def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: Kind) -> str:
     decoded_type = type(cid_bytes).__name__
     details = f"decodes to an item of type {repr(decoded_type)}"
     explanation = [

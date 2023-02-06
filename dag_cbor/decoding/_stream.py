@@ -1,6 +1,9 @@
 r"""
     Byte-streams and snapshots used in DAG-CBOR decoding, keeping track of latest and previous read byte chunks for error reporting purposes.
 """
+
+from __future__ import annotations # See https://peps.python.org/pep-0563/
+
 from io import BufferedIOBase, BytesIO
 from typing import Optional
 

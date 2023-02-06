@@ -33,10 +33,14 @@ def make_apidocs() -> None:
     "pkg_name": str,
     "apidocs_folder": str,
     "pkg_path": str,
-    "toc_filename": Optional[str],
+    "toc_filename": str,
+    "type_alias_dict_filename": Optional[str],
     "include_members": Dict[str, List[str]],
+    "type_aliases": Dict[str, List[str]],
     "exclude_members": Dict[str, List[str]],
-    "exclude_modules": List[str]
+    "exclude_modules": List[str],
+    "member_fullnames": Dict[str, Dict[str, str]],
+    "special_class_members": Dict[str, List[str]],
 }
 
 Set "toc_filename" to null to avoid generating a table of contents file.
@@ -52,21 +56,33 @@ Set "toc_filename" to null to avoid generating a table of contents file.
             apidocs_folder = config.get("apidocs_folder", None)
             validate(apidocs_folder, str)
             toc_filename = config.get("toc_filename", None)
-            validate(toc_filename, Optional[str])
-            include_members = config.get("include_members", None)
+            validate(toc_filename, str)
+            type_alias_dict_filename = config.get("type_alias_dict_filename", None)
+            validate(type_alias_dict_filename, Optional[str])
+            include_members = config.get("include_members", {})
             validate(include_members, Dict[str, List[str]])
-            exclude_members = config.get("exclude_members", None)
+            type_aliases = config.get("type_aliases", {})
+            validate(type_aliases, Dict[str, List[str]])
+            exclude_members = config.get("exclude_members", {})
             validate(exclude_members, Dict[str, List[str]])
-            include_modules = config.get("include_modules", None)
+            include_modules = config.get("include_modules", [])
             validate(include_modules, List[str])
-            exclude_modules = config.get("exclude_modules", None)
+            exclude_modules = config.get("exclude_modules", [])
             validate(exclude_modules, List[str])
+            member_fullnames = config.get("member_fullnames", {})
+            validate(member_fullnames, Dict[str, Dict[str, str]])
+            special_class_members = config.get("special_class_members", {})
+            validate(special_class_members, Dict[str, List[str]])
     except FileNotFoundError:
         print(err_msg)
         sys.exit(1)
     except TypeError:
         print(err_msg)
         sys.exit(1)
+    for mod_name, type_alias_members in type_aliases.items():
+        if mod_name not in include_members:
+            include_members[mod_name] = []
+        include_members[mod_name].extend(type_alias_members)
 
     cwd = os.getcwd()
     os.chdir(pkg_path)
@@ -87,6 +103,22 @@ Set "toc_filename" to null to avoid generating a table of contents file.
         os.remove(apidoc_file)
     print()
 
+    type_alias_fullnames: dict[str, str] = {}
+
+    print("Pre-processing type aliases:")
+    for mod_name, mod_type_aliases in type_aliases.items():
+        if mod_name in exclude_modules:
+            continue
+        for member_name in mod_type_aliases:
+            member_fullname = f"{mod_name}.{member_name}"
+            if member_name in type_alias_fullnames:
+                print(f"    WARNING! Skipping type alias {member_name} -> {member_fullname}")
+                print(f"             Existing type alias {member_name} -> {type_alias_fullnames[member_name]}")
+            else:
+                type_alias_fullnames[member_name] = member_fullname
+                print(f"    {member_name} -> {member_fullname}")
+    print()
+
     for mod_name, mod in modules_dict.items():
         if mod_name in exclude_modules:
             continue
@@ -101,8 +133,12 @@ Set "toc_filename" to null to avoid generating a table of contents file.
         ]
         mod__all__ = getattr(mod, "__all__", [])
         reexported_members: List[Tuple[str, str]] = []
-        for member_name in sorted(name for name in dir(mod) if not name.startswith("_")):
-            if mod_name in exclude_members and member_name in exclude_members[mod_name]:
+        for member_name in sorted(name for name in dir(mod)):
+            to_include = mod_name in include_members and member_name in include_members[mod_name]
+            to_exclude = mod_name in exclude_members and member_name in exclude_members[mod_name]
+            if to_exclude:
+                continue
+            if member_name.startswith("_") and not to_include:
                 continue
             member = getattr(mod, member_name)
             member_module = inspect.getmodule(member)
@@ -110,7 +146,11 @@ Set "toc_filename" to null to avoid generating a table of contents file.
             imported_member = member_module is not None and member_module != mod
             if mod_name in include_members and member_name in include_members[mod_name]:
                 imported_member = False
-            if imported_member:
+            if member_name in type_alias_fullnames:
+                member_fullname = type_alias_fullnames[member_name]
+            elif mod_name in member_fullnames and member_name in member_fullnames[mod_name]:
+                member_fullname = member_fullnames[mod_name][member_name]
+            elif imported_member:
                 if inspect.ismodule(member):
                     member_fullname = member_module_name or ""
                 else:
@@ -133,9 +173,15 @@ Set "toc_filename" to null to avoid generating a table of contents file.
                     f".. auto{member_kind}:: {member_fullname}",
                 ]
                 if member_kind == "class":
+                    member_lines.append("    :show-inheritance:")
                     member_lines.append("    :members:")
+                    if member_fullname in special_class_members and special_class_members[member_fullname]:
+                        member_lines.append(f"    :special-members: {', '.join(special_class_members[member_fullname])}")
                 member_lines.append("")
-                print(f"    {member_kind} {member_name}")
+                if member_name in type_alias_fullnames:
+                    print(f"    {member_kind} {member_name} -> {type_alias_fullnames[member_name]} (type alias)")
+                else:
+                    print(f"    {member_kind} {member_name}")
                 lines.extend(member_lines)
             elif member_name in mod__all__:
                 reexported_members.append((member_fullname, member_kind))
@@ -182,6 +228,14 @@ Set "toc_filename" to null to avoid generating a table of contents file.
 
     with open(toc_filename, "w") as f:
         f.write("\n".join(toctable_lines))
+
+    if type_alias_dict_filename is not None:
+        print(f"Writing type alias dictionary: {type_alias_dict_filename}")
+        for name, fullname in type_alias_fullnames.items():
+            print(f"    {name} -> {fullname}")
+        print()
+        with open(type_alias_dict_filename, "w") as f:
+            json.dump(type_alias_fullnames, f, indent=4)
 
 if __name__ == "__main__":
     make_apidocs()

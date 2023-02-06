@@ -3,9 +3,11 @@
     "pkg_path": "..",
     "apidocs_folder": "api",
     "toc_filename": "api-toc.rst",
-    "include_members": {
-        "dag_cbor.encoding": ["FlatEncodableType", "EncodableType"],
-        "dag_cbor.decoding": ["DecodeCallback"]
+    "type_alias_dict_filename": "autodoc-type-aliases.json",
+    "include_members": {},
+    "type_aliases": {
+        "dag_cbor.decoding": ["DecodeCallback"],
+        "dag_cbor.ipld": ["ScalarKind", "Kind", "Path", "Segment"]
     },
     "exclude_members": {},
     "include_modules": [],
@@ -13,5 +15,9 @@
         "dag_cbor.decoding._err",
         "dag_cbor.decoding._err_utils",
         "dag_cbor.decoding._stream"
-    ]
+    ],
+    "member_fullnames": {},
+    "special_class_members": {
+        "dag_cbor.ipld.Path": ["__new__", "__truediv__", "__rtruediv__", "__le__", "__lt__", "__repr__", "__rshift__"]
+    }
 }
