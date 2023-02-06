@@ -1,5 +1,4 @@
 sphinx_rtd_theme
-sphinx_autodoc_typehints
 
 typing_extensions
 multiformats

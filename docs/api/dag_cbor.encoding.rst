@@ -17,3 +17,11 @@ encode
 ------
 
 .. autofunction:: dag_cbor.encoding.encode
+
+dag_cbor.encoding.__all__
+-------------------------
+
+The following members were explicitly reexported using ``__all__``:
+
+    - :py:class:`dag_cbor.encoding.err.CBOREncodingError`
+    - :py:class:`dag_cbor.encoding.err.DAGCBOREncodingError`

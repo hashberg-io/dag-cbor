@@ -78,7 +78,7 @@ def _parse_type(annotation: str) -> tuple[Union[ParsedType, Literal["..."]], str
         quote_close_idx = _find_closing_idx(annotation, '"', '"', 0)
     if quote_close_idx is not None:
         if quote_close_idx == 1:
-            raise ValueError(f"Cannot parse empty forward reference at start of annotation: {annotation = }")
+            raise ValueError(f"Cannot parse empty forward reference at start of annotation: annotation = {annotation}")
         annotation = annotation[1:quote_close_idx]+annotation[quote_close_idx+1:]
     try:
         b_open: Optional[int] = annotation.index("[")
@@ -106,21 +106,21 @@ def _parse_type(annotation: str) -> tuple[Union[ParsedType, Literal["..."]], str
                 assert arg == "...", arg
                 variadic = True
                 if _args_str:
-                    raise ValueError(f"Ellipsis argument encountered in parametric type, but not at the end of args lis: {annotation = }, {args_str = }")
+                    raise ValueError(f"Ellipsis argument encountered in parametric type, but not at the end of args lis: annotation = {annotation}, {args_str = }")
             if not _args_str:
                 break
             if not _args_str.startswith(", "):
-                raise ValueError(f"Multiple type parameters must be separated by ', ': {annotation = }, {args_str = }, {arg = } {_args_str = }")
+                raise ValueError(f"Multiple type parameters must be separated by ', ': annotation = {annotation}, {args_str = }, {arg = } {_args_str = }")
             args_str = _args_str[2:]
         return ParsedType(name, tuple(args), variadic), res
     if c_idx is not None:
         name = annotation[:c_idx]
         res = annotation[c_idx:]
         if name == "...":
-            raise ValueError(f"Found ellipsis followed by comma: {annotation = }")
+            raise ValueError(f"Found ellipsis followed by comma: annotation = {annotation}")
         return ParsedType(name), res
     if "]" in annotation:
-        raise ValueError(f"Encountered closing bracket ']' without any opening bracket: {annotation = } ")
+        raise ValueError(f"Encountered closing bracket ']' without any opening bracket: annotation = {annotation} ")
     name = annotation
     if name == "...":
         return "...", ""
@@ -130,9 +130,9 @@ def parse_type(annotation: str) -> ParsedType:
     r""" Parses an annotation into a type. """
     parsed_type, residual_string = _parse_type(annotation)
     if residual_string:
-        raise ValueError(f"Annotation was not entirely consumed by parsing: {annotation = }, {parsed_type = }, {residual_string = }")
+        raise ValueError(f"Annotation was not entirely consumed by parsing: annotation = {annotation}, {parsed_type = }, {residual_string = }")
     if not isinstance(parsed_type, ParsedType):
-        raise ValueError(f"Cannot parse ellipsis on its own: {annotation = }")
+        raise ValueError(f"Cannot parse ellipsis on its own: annotation = {annotation}")
     return parsed_type
 
 def sigdoc(fun: FunctionType, lines: list[str]) -> None:
