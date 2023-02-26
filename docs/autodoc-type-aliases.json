@@ -2,6 +2,6 @@
     "DecodeCallback": "dag_cbor.decoding.DecodeCallback",
     "IPLDScalarKind": "dag_cbor.ipld.IPLDScalarKind",
     "IPLDKind": "dag_cbor.ipld.IPLDKind",
-    "ObjPath": "dag_cbor.ipld.ObjPath",
-    "ObjPathSegment": "dag_cbor.ipld.ObjPathSegment"
+    "IPLDObjPath": "dag_cbor.ipld.IPLDObjPath",
+    "IPLDObjPathSegment": "dag_cbor.ipld.IPLDObjPathSegment"
 }

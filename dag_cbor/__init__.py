@@ -4,11 +4,11 @@
 
 from __future__ import annotations # See https://peps.python.org/pep-0563/
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
-from .ipld import IPLDKind, IPLDScalarKind, ObjPath
+from .ipld import IPLDKind, IPLDScalarKind, IPLDObjPath
 from .encoding import encode
 from .decoding import decode
 
 # explicit re-exports
-__all__ = ["encode", "decode", "IPLDKind", "IPLDScalarKind", "ObjPath"]
+__all__ = ["encode", "decode", "IPLDKind", "IPLDScalarKind", "IPLDObjPath"]
