@@ -15,7 +15,7 @@ from typing_validation import validate
 
 from multiformats import multicodec, CID, varint
 
-from ..ipld import Kind
+from ..ipld import IPLDKind
 from ..encoding import _dag_cbor_code
 from .err import CBORDecodingError, DAGCBORDecodingError
 from . import _err
@@ -27,7 +27,7 @@ class DecodeCallback(Protocol):
     r"""
         Type of optional callbacks for the :func:`decode` function.
     """
-    def __call__(self, value: Kind, num_bytes_read: int) -> None:
+    def __call__(self, value: IPLDKind, num_bytes_read: int) -> None:
         ...
 
 class _DecodeOptions(TypedDict, total=False):
@@ -43,7 +43,7 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
            allow_concat: bool = False,
            callback: Optional["DecodeCallback"] = None,
            require_multicodec: bool = False,
-           normalize_strings: Literal["NFC", "NFKC", "NFD", "NFKD", None] = None) -> Kind:
+           normalize_strings: Literal["NFC", "NFKC", "NFD", "NFKD", None] = None) -> IPLDKind:
     r"""
         Decodes and returns a single data item from the given ``stream_or_bytes``, with the DAG-CBOR codec.
 
@@ -131,9 +131,9 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
             raise DAGCBORDecodingError(_err._multiple_top_level_items(stream))
     return data
 
-def _decode_item(stream: Stream, options: _DecodeOptions) -> Tuple[Kind, int]:
+def _decode_item(stream: Stream, options: _DecodeOptions) -> Tuple[IPLDKind, int]:
     major_type, arg, num_bytes_read = _decode_head(stream)
-    ret: Optional[Tuple[Kind, int]] = None
+    ret: Optional[Tuple[IPLDKind, int]] = None
     assert 0x0 <= major_type <= 0x7, f"Major type must be one of 0x0-0x7, found 0x{major_type:x} instead."
     if isinstance(arg, float):
         # Major type 0x7 (float case):
@@ -234,7 +234,7 @@ def _decode_list(stream: Stream, length: int, options: _DecodeOptions) -> Tuple[
 def _decode_dict_key(stream: Stream, key_idx: int, dict_length: int, options: _DecodeOptions) -> Tuple[str, int, bytes]:
     # pylint: disable = too-many-return-statements, too-many-branches
     major_type, arg, num_bytes_read = _decode_head(stream)
-    ret: Optional[Tuple[Kind, int]] = None
+    ret: Optional[Tuple[IPLDKind, int]] = None
     if major_type != 0x3:
         raise DAGCBORDecodingError(_err._dict_key_type(stream, major_type))
     assert not isinstance(arg, float)
@@ -309,7 +309,7 @@ def _decode_bool_none(stream: Stream, arg: int, options: _DecodeOptions) -> Tupl
 def _decode_dummy(stream: Stream, arg: int, options: _DecodeOptions) -> Tuple[None, int]:
     assert False, f"Major type {arg} does not have an associated decoder."
 
-_decoders: Tuple[Callable[[Stream, int, _DecodeOptions], Tuple[Kind, int]], ...] = (
+_decoders: Tuple[Callable[[Stream, int, _DecodeOptions], Tuple[IPLDKind, int]], ...] = (
     _decode_dummy,
     _decode_dummy,
     _decode_bytes,

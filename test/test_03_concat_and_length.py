@@ -6,7 +6,7 @@
 
 from io import BytesIO
 from dag_cbor import encode, decode
-from dag_cbor.ipld import Kind
+from dag_cbor.ipld import IPLDKind
 from dag_cbor.random import rand_data
 
 nsamples = 1000
@@ -15,7 +15,7 @@ nconcat = 3
 class BytesReadCounter:
     """ Counter for bytes read while decoding. """
     _num_bytes_read: int = 0
-    def __call__(self, value: Kind, num_bytes_read: int) -> None:
+    def __call__(self, value: IPLDKind, num_bytes_read: int) -> None:
         self._num_bytes_read += num_bytes_read
     def __int__(self) -> int:
         return self._num_bytes_read

@@ -29,7 +29,7 @@ from typing_validation import validate
 
 from multiformats import CID
 
-ScalarKind = Union[None, bool, int, float, str, bytes, CID]
+IPLDScalarKind = Union[None, bool, int, float, str, bytes, CID]
 r"""
     Python type alias for scalar `kinds <https://ipld.io/docs/data-model/kinds/>`_ in the IPLD data model:
 
@@ -43,7 +43,7 @@ r"""
 
 """
 
-Kind = Union[ScalarKind, List["Kind"], Dict[str, "Kind"]]
+IPLDKind = Union[IPLDScalarKind, List["IPLDKind"], Dict[str, "IPLDKind"]]
 r"""
     Python type alias for `kinds <https://ipld.io/docs/data-model/kinds/>`_ in the IPLD data model:
 
@@ -59,39 +59,39 @@ r"""
 
 """
 
-Segment = Union[int, str]
+ObjPathSegment = Union[int, str]
 r"""
-    An individual segment in a :class:`Path` within a IPLD value (see :obj:`Kind` for the ). A segment can be an :obj:`int` or a :obj:`str`:
+    An individual segment in a :class:`ObjPath` within a IPLD value (see :obj:`IPLDKind` for the ). A segment can be an :obj:`int` or a :obj:`str`:
 
-    - an :obj:`int` segment is a position, indexing an item in a value of List :obj:`Kind` (a :obj:`List` in Python)
-    - an :obj:`str` segment is a key, indexing a value in a value of Map :obj:`Kind` (a :obj:`Dict` in Python)
+    - an :obj:`int` segment is a position, indexing an item in a value of List :obj:`IPLDKind` (a :obj:`List` in Python)
+    - an :obj:`str` segment is a key, indexing a value in a value of Map :obj:`IPLDKind` (a :obj:`Dict` in Python)
 
 """
 
-_Segments = Tuple[Segment, ...]
+_ObjPathSegments = Tuple[ObjPathSegment, ...]
 r"""
     Short type alias for multiple segments.
 """
 
-class Path(Sequence[Segment]):
+class ObjPath(Sequence[ObjPathSegment]):
     r"""
-        Path within an object of :obj:`Kind`, as a sequence of :obj:`Segment`.
+        Path within an object of :obj:`IPLDKind`, as a sequence of :obj:`ObjPathSegment`.
         Paths are immutable and hashable, and a path is a :obj:`Sequence` of the segments that constitute it.
     """
 
-    _instances: ClassVar[MutableMapping[_Segments, Path]] = WeakValueDictionary()
+    _instances: ClassVar[MutableMapping[_ObjPathSegments, ObjPath]] = WeakValueDictionary()
 
     @staticmethod
-    def parse(path_str: str) -> Path:
+    def parse(path_str: str) -> ObjPath:
         r"""
-            Parses a :class:`Path` from a string representation where segments are separated by `"/"`, such as that returned by
-            :meth:`Path.__repr__`.
+            Parses a :class:`ObjPath` from a string representation where segments are separated by `"/"`, such as that returned by
+            :meth:`ObjPath.__repr__`.
         """
-        if path_str.startswith("Path()"):
+        if path_str.startswith("ObjPath()"):
             path_str = path_str[6:]
         if not path_str.startswith("/"):
-            raise ValueError("Path must start with '/' or 'Path()/'.")
-        segs: List[Segment] = []
+            raise ValueError("Path must start with '/' or 'ObjPath()/'.")
+        segs: List[ObjPathSegment] = []
         seg_str_list = path_str[1:].split("/")
         for idx, seg_str in enumerate(seg_str_list):
             if seg_str.startswith("'"):
@@ -106,39 +106,39 @@ class Path(Sequence[Segment]):
                 if not seg_str.isnumeric():
                     raise ValueError(f"At segment {idx}: segment is unquoted and not numeric.")
                 segs.append(int(seg_str))
-        return Path._new_instance(tuple(segs))
+        return ObjPath._new_instance(tuple(segs))
 
     @staticmethod
-    def _new_instance(segments: Tuple[Segment, ...]) -> Path:
+    def _new_instance(segments: Tuple[ObjPathSegment, ...]) -> ObjPath:
         r"""
-            Returns an instance of :class:`Path` with given segments, without performing any validation.
+            Returns an instance of :class:`ObjPath` with given segments, without performing any validation.
         """
-        instance = Path._instances.get(segments)
+        instance = ObjPath._instances.get(segments)
         if instance is None:
-            instance = object.__new__(Path)
+            instance = object.__new__(ObjPath)
             instance._segments = segments
-            Path._instances[segments] = instance
+            ObjPath._instances[segments] = instance
         return instance
 
-    _segments: _Segments
+    _segments: _ObjPathSegments
 
-    def __new__(cls, *segments: Segment) -> Path:
-        r""" Constructor for :class:`Path`. """
-        validate(segments, _Segments)
-        return Path._new_instance(segments)
+    def __new__(cls, *segments: ObjPathSegment) -> ObjPath:
+        r""" Constructor for :class:`ObjPath`. """
+        validate(segments, _ObjPathSegments)
+        return ObjPath._new_instance(segments)
 
-    def access(self, value: Kind) -> Kind:
+    def access(self, value: IPLDKind) -> IPLDKind:
         r"""
             Accesses the sub-value at this path in the given IPLD value.
-            Can be written more expressively as `self >> value`, see :meth:`Path.__rshift__`.
+            Can be written more expressively as `self >> value`, see :meth:`ObjPath.__rshift__`.
         """
         return _access(self, value)
 
-    def __truediv__(self, other: Union[Segment, Path]) -> Path:
+    def __truediv__(self, other: Union[ObjPathSegment, ObjPath]) -> ObjPath:
         r"""
             The `/` operator can be used to create paths by concatenating segments. Below we use `_` as a suggestive name for an empty path, acting as root:
 
-            >>> _ = Path()
+            >>> _ = ObjPath()
             >>> p = _/2/'red'
             >>> p
             /2/'red'
@@ -157,16 +157,16 @@ class Path(Sequence[Segment]):
             /2/'red'/0/'blue'
         """
         if isinstance(other, (int, str)):
-            return Path._new_instance(self._segments+(other,))
-        if isinstance(other, Path):
-            return Path._new_instance(self._segments+other._segments)
+            return ObjPath._new_instance(self._segments+(other,))
+        if isinstance(other, ObjPath):
+            return ObjPath._new_instance(self._segments+other._segments)
         return NotImplemented
 
-    def __rtruediv__(self, other: Union[Segment, Path]) -> Path:
+    def __rtruediv__(self, other: Union[ObjPathSegment, ObjPath]) -> ObjPath:
         r"""
             It is possible to prepend a single segment at a time to an existing path using `/` (a new path is returned):
 
-            >>> _ = Path()
+            >>> _ = ObjPath()
             >>> p = _/2/'red'
             >>> 1/p
             /1/2/'red'
@@ -177,33 +177,33 @@ class Path(Sequence[Segment]):
             /0/1/2/'red'
         """
         if isinstance(other, (int, str)):
-            return Path._new_instance((other,)+self._segments)
+            return ObjPath._new_instance((other,)+self._segments)
         return NotImplemented
 
     def __len__(self) -> int:
         return len(self._segments)
 
-    def __iter__(self) -> Iterator[Segment]:
+    def __iter__(self) -> Iterator[ObjPathSegment]:
         return iter(self._segments)
 
     @overload
-    def __getitem__(self, idx: int) -> Segment:
+    def __getitem__(self, idx: int) -> ObjPathSegment:
         ...
 
     @overload
-    def __getitem__(self, idx: slice) -> Path:
+    def __getitem__(self, idx: slice) -> ObjPath:
         ...
 
-    def __getitem__(self, idx: Union[int, slice]) -> Union[Segment, Path]:
+    def __getitem__(self, idx: Union[int, slice]) -> Union[ObjPathSegment, ObjPath]:
         if isinstance(idx, int):
             return self._segments[idx]
-        return Path._new_instance(self._segments[idx])
+        return ObjPath._new_instance(self._segments[idx])
 
-    def __le__(self, other: Path) -> bool:
+    def __le__(self, other: ObjPath) -> bool:
         r"""
             The `<` and `<=` operators can be used to check whether a path is a (strict) sub-path of another path, starting at the same root:
 
-            >>> _ = Path()
+            >>> _ = ObjPath()
             >>> p = _/0/'red'
             >>> q = p/1/2
             >>> p == q
@@ -214,13 +214,13 @@ class Path(Sequence[Segment]):
             True
 
         """
-        if isinstance(other, Path):
+        if isinstance(other, ObjPath):
             return len(self) <= len(other) and all(a == b for a, b in zip(self, other))
         return NotImplemented
 
-    def __lt__(self, other: Path) -> bool:
-        r""" See :meth:`Path.__le__`. """
-        if isinstance(other, Path):
+    def __lt__(self, other: ObjPath) -> bool:
+        r""" See :meth:`ObjPath.__le__`. """
+        if isinstance(other, ObjPath):
             return len(self) < len(other) and all(a == b for a, b in zip(self, other))
         return NotImplemented
 
@@ -232,11 +232,11 @@ class Path(Sequence[Segment]):
         """
         return "/"+"/".join(repr(seg) for seg in self)
 
-    def __rshift__(self, value: Kind) -> Kind:
+    def __rshift__(self, value: IPLDKind) -> IPLDKind:
         r"""
             Accesses the sub-value at this path in the given IPLD value:
 
-            >>> _ = Path()
+            >>> _ = ObjPath()
             >>> _ >> [0, False, {"a": b"hello", "b": "bye"}]
             [0, False, {'a': b'hello', 'b': 'bye'}]
             >>> _/2 >> [0, False, {"a": b"hello", "b": "bye"}]
@@ -244,12 +244,12 @@ class Path(Sequence[Segment]):
             >>> _/2/'b' >> [0, False, {"a": b"hello", "b": "bye"}]
             'bye'
 
-            :raises ValueError: if attempting to access a sub-value in a value of :obj:`ScalarKind`
-            :raises ValueError: if attempting to access a sub-value indexed by a :obj:`str` segment in a value of list :obj:`Kind` (a Python :obj:`List`)
-            :raises ValueError: if attempting to access a sub-value keyed by a :obj:`int` segment in a value of map :obj:`Kind` (a Python :obj:`Dict`)
+            :raises ValueError: if attempting to access a sub-value in a value of :obj:`IPLDScalarKind`
+            :raises ValueError: if attempting to access a sub-value indexed by a :obj:`str` segment in a value of list :obj:`IPLDKind` (a Python :obj:`List`)
+            :raises ValueError: if attempting to access a sub-value keyed by a :obj:`int` segment in a value of map :obj:`IPLDKind` (a Python :obj:`Dict`)
             :raises IndexError: if attempting to access a sub-value in a value of list kind, where the :obj:`int` segment is not a valid index for the list
             :raises KeyError: if attempting to access a sub-value in a value of map kind, where the :obj:`str` segment is not a valid key for the map
-            :raises TypeError: if any of the sub-values along the path is not of IPLD :obj:`Kind` at the top level
+            :raises TypeError: if any of the sub-values along the path is not of IPLD :obj:`IPLDKind` at the top level
         """
         return _access(self, value)
 
@@ -257,9 +257,9 @@ class Path(Sequence[Segment]):
 _scalar_kinds = (type(None), bool, int, float, str, bytes, CID)
 _recursive_kinds = (list, dict)
 
-def _access(path: Path, value: Kind, idx: int = 0) -> Kind:
+def _access(path: ObjPath, value: IPLDKind, idx: int = 0) -> IPLDKind:
     r"""
-        Implementation for :func:`Path.access` and :func:`Path.__rshift__`.
+        Implementation for :func:`ObjPath.access` and :func:`ObjPath.__rshift__`.
     """
     if isinstance(value, _scalar_kinds):
         if len(path) > idx:

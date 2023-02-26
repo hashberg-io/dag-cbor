@@ -15,7 +15,7 @@ from typing_validation import validate
 
 from multiformats import multicodec, multibase, multihash, CID
 
-from .ipld import Kind
+from .ipld import IPLDKind
 from .encoding import encode, _canonical_order_dict
 
 _min_int = -18446744073709551616
@@ -251,7 +251,7 @@ def set_options(*,
     _options = _new_options
 
 
-def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Kind]:
+def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[IPLDKind]:
     r"""
         Generates a stream of random data.
 
@@ -269,7 +269,7 @@ def rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> 
     validate(max_nesting, Optional[int])
     return _rand_data(n, max_nesting=max_nesting)
 
-def _rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Kind]:
+def _rand_data(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[IPLDKind]:
     if n is not None and n < 0:
         raise ValueError()
     if max_nesting is None:
@@ -548,7 +548,7 @@ _cid_version = 1
 _cid_multicodec = multicodec.get("dag-cbor")
 _cid_multihash = multihash.get("sha3-512")
 
-def rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[Kind, CID]]:
+def rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[IPLDKind, CID]]:
     r"""
         Generates a stream of random DAG-CBOR data and associated CIDs:
 
@@ -582,7 +582,7 @@ def rand_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> I
 def _rand_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[CID]:
     return (cid for _, cid in _rand_data_cid(n, max_nesting=max_nesting))
 
-def _rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[Kind, CID]]:
+def _rand_data_cid(n: Optional[int] = None, *, max_nesting: Optional[int] = None) -> Iterator[Tuple[IPLDKind, CID]]:
     if n is not None and n < 0:
         raise ValueError()
     if max_nesting is None:

@@ -10,7 +10,7 @@ from typing_extensions import Literal
 
 from multiformats import varint
 
-from ..ipld import Kind
+from ..ipld import IPLDKind
 from ..encoding import _dag_cbor_code
 from .err import CBORDecodingError
 from ._stream import Stream, StreamSnapshot
@@ -139,7 +139,7 @@ def _invalid_tag(stream: Stream, arg: int) -> str:
 def _cid(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], e: CBORDecodingError) -> str:
     return _cid_error_template(cid_head_snapshots, *_extract_error_cause_lines(e))
 
-def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: Kind) -> str:
+def _cid_bytes(cid_head_snapshots: Tuple[StreamSnapshot, StreamSnapshot], stream: Stream, cid_bytes: IPLDKind) -> str:
     decoded_type = type(cid_bytes).__name__
     details = f"decodes to an item of type {repr(decoded_type)}"
     explanation = [

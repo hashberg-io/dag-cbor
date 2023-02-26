@@ -15,7 +15,7 @@ from typing_validation import validate
 
 from multiformats import varint, multicodec, CID
 
-from ..ipld import Kind, Path
+from ..ipld import IPLDKind, ObjPath
 from .err import CBOREncodingError, DAGCBOREncodingError
 
 __all__ = ("CBOREncodingError", "DAGCBOREncodingError")
@@ -44,20 +44,20 @@ def canonical_order_dict(value: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @overload
-def encode(data: Kind, stream: None = None, *,
+def encode(data: IPLDKind, stream: None = None, *,
            include_multicodec: bool = False,
            normalize_strings: Optional[Literal["NFC", "NFKC", "NFD", "NFKD"]] = None
           ) -> bytes:
     ... # pragma: no cover
 
 @overload
-def encode(data: Kind, stream: BufferedIOBase, *,
+def encode(data: IPLDKind, stream: BufferedIOBase, *,
            include_multicodec: bool = False,
            normalize_strings: Optional[Literal["NFC", "NFKC", "NFD", "NFKD"]] = None
           ) -> int:
     ... # pragma: no cover
 
-def encode(data: Kind, stream: Optional[BufferedIOBase] = None, *,
+def encode(data: IPLDKind, stream: Optional[BufferedIOBase] = None, *,
            include_multicodec: bool = False,
            normalize_strings: Optional[Literal["NFC", "NFKC", "NFD", "NFKD"]] = None
           ) -> Union[bytes, int]:
@@ -68,7 +68,7 @@ def encode(data: Kind, stream: Optional[BufferedIOBase] = None, *,
 
         .. code-block:: python
 
-            def encode(data: Kind, stream: None = None) -> bytes:
+            def encode(data: IPLDKind, stream: None = None) -> bytes:
                 ...
 
         Example usage:
@@ -80,7 +80,7 @@ def encode(data: Kind, stream: Optional[BufferedIOBase] = None, *,
 
         .. code-block:: python
 
-            def encode(data: Kind, stream: BufferedIOBase) -> int:
+            def encode(data: IPLDKind, stream: BufferedIOBase) -> int:
                 ...
 
         Example usage with a stream:
@@ -111,7 +111,7 @@ def encode(data: Kind, stream: Optional[BufferedIOBase] = None, *,
     if normalize_strings is not None:
         validate(normalize_strings, Literal["NFC", "NFKC", "NFD", "NFKD"])
         options["normalize_strings"] = normalize_strings
-    path = Path()
+    path = ObjPath()
     if stream is None:
         internal_stream = BytesIO()
         if include_multicodec:
@@ -131,7 +131,7 @@ class _EncodeOptions(TypedDict, total=False):
     normalize_strings: Literal["NFC", "NFKC", "NFD", "NFKD"]
     r""" Optional Unicode normalization to be performed on UTF-8 strings prior to byte encoding. """
 
-def _encode(stream: BufferedIOBase, value: Kind, path: Path, options: _EncodeOptions) -> int:
+def _encode(stream: BufferedIOBase, value: IPLDKind, path: ObjPath, options: _EncodeOptions) -> int:
     # pylint: disable = too-many-return-statements, too-many-branches
     if isinstance(value, bool): # must go before int check
         # major type 0x7 (additional info 20 and 21)
@@ -182,7 +182,7 @@ def _encode_head(stream: BufferedIOBase, major_type: int, arg: int) -> int:
     stream.write(head)
     return len(head)
 
-def _encode_int(stream: BufferedIOBase, value: int, path: Path, options: _EncodeOptions) -> int:
+def _encode_int(stream: BufferedIOBase, value: int, path: ObjPath, options: _EncodeOptions) -> int:
     if value >= 18446744073709551616:
         # unsigned int must be < 2**64
         err = f"Error encoding integer value at {path}: Unsigned integer out of range."
@@ -197,12 +197,12 @@ def _encode_int(stream: BufferedIOBase, value: int, path: Path, options: _Encode
     # negative int
     return _encode_head(stream, 0x1, -1-value)
 
-def _encode_bytes(stream: BufferedIOBase, value: bytes, path: Path, options: _EncodeOptions) -> int:
+def _encode_bytes(stream: BufferedIOBase, value: bytes, path: ObjPath, options: _EncodeOptions) -> int:
     num_head_bytes = _encode_head(stream, 0x2, len(value))
     stream.write(value)
     return num_head_bytes+len(value)
 
-def _encode_str(stream: BufferedIOBase, value: str, path: Path, options: _EncodeOptions) -> int:
+def _encode_str(stream: BufferedIOBase, value: str, path: ObjPath, options: _EncodeOptions) -> int:
     if "normalize_strings" in options:
         value = unicodedata.normalize(options["normalize_strings"], value)
     utf8_value: bytes = value.encode("utf-8", errors="strict")
@@ -210,13 +210,13 @@ def _encode_str(stream: BufferedIOBase, value: str, path: Path, options: _Encode
     stream.write(utf8_value)
     return num_head_bytes+len(utf8_value)
 
-def _encode_list(stream: BufferedIOBase, value: List[Any], path: Path, options: _EncodeOptions) -> int:
+def _encode_list(stream: BufferedIOBase, value: List[Any], path: ObjPath, options: _EncodeOptions) -> int:
     num_bytes_written = _encode_head(stream, 0x4, len(value))
     for idx, item in enumerate(value):
         num_bytes_written += _encode(stream, item, path/idx, options)
     return num_bytes_written
 
-def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any], path: Path, options: _EncodeOptions) -> int:
+def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any], path: ObjPath, options: _EncodeOptions) -> int:
     _check_key_compliance(value, path)
     if "normalize_strings" in options:
         nf = options["normalize_strings"]
@@ -234,18 +234,18 @@ def _encode_dict(stream: BufferedIOBase, value: Dict[str, Any], path: Path, opti
         num_bytes_written += _encode(stream, v, path/k, options)
     return num_bytes_written
 
-def _encode_cid(stream: BufferedIOBase, value: CID, path: Path, options: _EncodeOptions) -> int:
+def _encode_cid(stream: BufferedIOBase, value: CID, path: ObjPath, options: _EncodeOptions) -> int:
     num_bytes_written = _encode_head(stream, 0x6, 42)
     num_bytes_written += _encode_bytes(stream, b"\0" + bytes(value), path, options)
     return num_bytes_written
 
-def _encode_bool(stream: BufferedIOBase, value: bool, path: Path, options: _EncodeOptions) -> int:
+def _encode_bool(stream: BufferedIOBase, value: bool, path: ObjPath, options: _EncodeOptions) -> int:
     return _encode_head(stream, 0x7, 21 if value else 20)
 
-def _encode_none(stream: BufferedIOBase, value: None, path: Path, options: _EncodeOptions) -> int:
+def _encode_none(stream: BufferedIOBase, value: None, path: ObjPath, options: _EncodeOptions) -> int:
     return _encode_head(stream, 0x7, 22)
 
-def _encode_float(stream: BufferedIOBase, value: float, path: Path, options: _EncodeOptions) -> int:
+def _encode_float(stream: BufferedIOBase, value: float, path: ObjPath, options: _EncodeOptions) -> int:
     if math.isnan(value):
         err = f"Error encoding float value at {path}: NaN is not allowed."
         raise DAGCBOREncodingError(err)
@@ -258,7 +258,7 @@ def _encode_float(stream: BufferedIOBase, value: float, path: Path, options: _En
     stream.write(head)
     return len(head)
 
-def _check_key_compliance(value: Dict[str, Any], path: Optional[Path] = None) -> None:
+def _check_key_compliance(value: Dict[str, Any], path: Optional[ObjPath] = None) -> None:
     """ Check keys for DAG-CBOR compliance. """
     for idx, k in enumerate(value.keys()):
         if not isinstance(k, str):
