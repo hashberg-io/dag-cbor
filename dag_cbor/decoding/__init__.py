@@ -8,7 +8,7 @@ from io import BufferedIOBase, BytesIO
 import math
 import struct
 import sys
-from typing import Any, Dict, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Callable, List, Optional, Sequence, Tuple, Union, cast
 import unicodedata
 from typing_extensions import Literal, Protocol, TypedDict
 from typing_validation import validate
@@ -289,7 +289,7 @@ def _decode_cid(stream: Stream, arg: int, options: _DecodeOptions) -> Tuple[CID,
     cid_head_snapshots = stream.prev_snapshot, stream.curr_snapshot
     try:
         if "callback" in options:
-            options = {**options}
+            options = cast(_DecodeOptions, {**options})
             del options["callback"]
         cid_bytes, num_bytes_read = _decode_item(stream, options)
     except CBORDecodingError as e:

@@ -12,3 +12,4 @@ from .decoding import decode
 
 # explicit re-exports
 __all__ = ["encode", "decode", "IPLDKind", "IPLDScalarKind", "IPLDObjPath"]
+
