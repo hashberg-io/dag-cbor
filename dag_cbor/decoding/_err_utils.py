@@ -49,7 +49,7 @@ def _decode_error_msg_lines(*snapshots: StreamSnapshot, details: Optional[str] =
         - The ``dots`` argument can be used to specify that three dots '...' should be added after the bytes, to indicate continuation.
 
     """
-    # pylint: disable = too-many-locals
+    # pylint: disable = too-many-locals, too-many-arguments
     assert snapshots
     bs = b"".join((snapshot.latest_read for snapshot in snapshots))[start:end]
     pos = snapshots[0].latest_read_start+start
@@ -92,6 +92,7 @@ def _decode_error_msg(msg: str, *snapshots: StreamSnapshot, details: Optional[st
         Creates a detailed, multi-line error message, starting from a given ``msg`` and taking into account the information from one or more stream snapshots.
         The resulting error message has ``msg`` on the first line, followed by the lines returned by :func:`_decode_error_msg_lines`.
     """
+    # pylint: disable = too-many-arguments
     lines = [msg]
     if snapshots:
         lines.extend(_decode_error_msg_lines(*snapshots, details=details,

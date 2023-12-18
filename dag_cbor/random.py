@@ -118,7 +118,7 @@ def options(*,
             float_decimals: int # number of decimals to keep in floats
             include_cid: bool   # whether to generate CID values
     """
-    # pylint: disable = too-many-locals
+    # pylint: disable = too-many-locals, too-many-arguments
     global _options
     global _rand
     _old_options = _options
@@ -160,7 +160,7 @@ def set_options(*,
         Permanently sets random generation options. See :func:`options` for the available options.
 
     """
-    # pylint: disable = too-many-branches, too-many-locals, too-many-statements
+    # pylint: disable = too-many-branches, too-many-locals, too-many-statements, too-many-arguments
     for iarg in (seed, min_int, max_int, min_bytes, max_bytes, min_chars, max_chars,
                  min_codepoint, max_codepoint, min_len, max_len, max_nesting, float_decimals):
         validate(iarg, Optional[int])

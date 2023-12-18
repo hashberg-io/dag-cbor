@@ -8,10 +8,8 @@ class CBORDecodingError(CBORError):
     """
         Class for decoding errors due to the CBOR specification.
     """
-    ...
 
 class DAGCBORDecodingError(CBORDecodingError, DAGCBORError):
     """
         Class for decoding errors due to the DAG-CBOR specification.
     """
-    ...

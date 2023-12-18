@@ -152,6 +152,7 @@ def _decode_item(stream: Stream, options: _DecodeOptions) -> Tuple[IPLDKind, int
         options["callback"](*ret)
     return ret
 
+
 def _decode_head(stream: Stream) -> Tuple[int, Union[int, float], int]:
     # pylint: disable = too-many-branches
     # read leading byte
@@ -173,6 +174,8 @@ def _decode_head(stream: Stream) -> Tuple[int, Union[int, float], int]:
         raise CBORDecodingError(_err._unexpected_eof(stream, f"{argument_nbytes} byte argument of data item head", argument_nbytes))
     if additional_info == 24:
         # 1 byte of unsigned int argument value to follow
+        if res[0] < 24:
+            raise DAGCBORDecodingError(_err._excessive_int_size(stream, res[0], 1, 0))
         return (major_type, res[0], 2)
     if additional_info == 25:
         # 2 bytes of unsigned int argument value to follow
@@ -286,7 +289,7 @@ def _decode_cid(stream: Stream, arg: int, options: _DecodeOptions) -> Tuple[CID,
     cid_head_snapshots = stream.prev_snapshot, stream.curr_snapshot
     try:
         if "callback" in options:
-            options = {**options} # type: ignore
+            options = {**options}
             del options["callback"]
         cid_bytes, num_bytes_read = _decode_item(stream, options)
     except CBORDecodingError as e:
