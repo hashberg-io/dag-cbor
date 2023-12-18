@@ -63,7 +63,7 @@ def decode(stream_or_bytes: Union[BufferedIOBase, bytes], *,
         16
         >>> stream = BytesIO(encoded_bytes)
         >>> bytes_read_cnt = BytesReadCounter()
-        >>> dag_cbor.decode(allow_concat=True, callback=bytes_read_cnt)
+        >>> dag_cbor.decode(stream, allow_concat=True, callback=bytes_read_cnt)
         {'a': 12, 'b': 'hello!'}
         >>> int(bytes_read_cnt)
         13
